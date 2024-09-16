@@ -1,0 +1,47 @@
+
+version: "3"
+
+services:
+  db:
+    image: postgres:16-alpine3.20
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d
+      - pgdata_game_server:/var/lib/posgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_MULTIPLE_DATABASES: gamedb,testdb
+      POSTGRES_PASSWORD: password
+  game-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: game-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/game-server
+    environment:
+      ENV: dev
+      GIN_MODE: debug
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: gamedb
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      TEST_DB_HOST: db
+      TEST_DB_NAME: testdb
+      TEST_DB_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      TEST_REDIS_HOST: redis-test
+      TEST_REDIS_PORT: 6379
+    command: go build && ./game-server
+    restart: on-failure:5
+    depends_on:
+      - db
+
+volumes:
+  pgdata_game_server:
+    name: pgdata_game_server
