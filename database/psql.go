@@ -15,32 +15,27 @@ func GetDatabase() *gorm.DB {
 
 	dbHost := os.Getenv("DB_HOST")
 
-	sslmode := "require"
-
 	if os.Getenv("ENV") == "test" {
 		dbHost = os.Getenv("TEST_DB_HOST")
-		sslmode = "disable"
 	}
 
 	logMode := logger.Silent
 	if os.Getenv("ENV") == "dev" {
 		logMode = logger.Info
-		sslmode = "disable"
 	}
 
-	var db *gorm.DB
-
 	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
 		os.Getenv("DB_USERNAME"),
 		os.Getenv("DB_PASSWORD"),
 		dbHost,
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
-		sslmode,
 	)
 
-	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{}, &gorm.Config{
+	log.Println(connectionString)
+
+	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{
 		Logger: logger.Default.LogMode(logMode),
 	})
 

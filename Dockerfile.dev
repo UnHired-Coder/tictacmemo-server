@@ -1,6 +1,9 @@
 FROM golang:1.23-alpine3.20
 
-RUN apk add --no-cache musl-dev gcc && go install github.com/ory/go-acc@latest && apk --no-cache add tzdata
+RUN apk add --no-cache musl-dev gcc && apk --no-cache add tzdata
+
 RUN mkdir /game-server
+
+EXPOSE 8080
 
 WORKDIR /game-server
