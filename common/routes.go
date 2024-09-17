@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AttachCommonRoutes(router *gin.Engine, db *gorm.DB) {
+func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	this := router.Group("/common")
 
 	{

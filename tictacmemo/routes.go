@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AttachTicTacMemoRoutes(router *gin.Engine, db *gorm.DB) {
+func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	this := router.Group("/tictacmemo")
 
 	{

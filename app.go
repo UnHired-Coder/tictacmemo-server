@@ -30,10 +30,10 @@ func main() {
 	db := database.GetDatabase()
 
 	// Attach the routes from common package
-	common.AttachCommonRoutes(router, db)
+	common.AttachRoutes(router, db)
 
 	// Attach the routes from tictacmemo package
-	tictacmemo.AttachTicTacMemoRoutes(router, db)
+	tictacmemo.AttachRoutes(router, db)
 
 	// Start the server on the specified port
 	server := &http.Server{
