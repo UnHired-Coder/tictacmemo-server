@@ -8,12 +8,15 @@ import (
 )
 
 func AttachRoutes(router *gin.Engine, db *gorm.DB) {
+
+	mms := InitMatchMaking()
+
 	this := router.Group("/tictacmemo")
 
 	{
-		this.POST("/create-room", handlers.CreateRoom(db))
 		this.POST("/join-room", handlers.JoinRoom(db))
 		this.POST("/update-score", handlers.UpdateScore(db))
+		this.POST("/find-match", handlers.FindMatch(db, mms))
 
 	}
 }
