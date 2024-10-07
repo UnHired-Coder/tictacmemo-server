@@ -11,8 +11,7 @@ func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	this := router.Group("/common")
 
 	{
-		this.POST("/create-user", handlers.CreateUser(db))
 		this.POST("/login", handlers.Login(db))
-
+		this.POST("/ready-to-play", handlers.PlayerReadyToPlay(db))
 	}
 }

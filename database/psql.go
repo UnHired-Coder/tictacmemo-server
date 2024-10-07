@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"game-server/common/models"
 	"log"
 	"os"
 	"time"
@@ -48,6 +49,18 @@ func GetDatabase() *gorm.DB {
 		sqlDB.SetMaxOpenConns(100)
 	} else {
 		log.Fatal("Failed to set connection pool parameters")
+	}
+
+	// User table
+	err = db.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatal("Failed to create User table:", err)
+	}
+
+	// Player table
+	err = db.AutoMigrate(&models.User{}, &models.Player{})
+	if err != nil {
+		log.Fatal("Failed to migrate database tables:", err)
 	}
 
 	return db
