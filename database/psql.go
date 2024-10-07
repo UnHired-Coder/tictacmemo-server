@@ -57,11 +57,5 @@ func GetDatabase() *gorm.DB {
 		log.Fatal("Failed to create User table:", err)
 	}
 
-	// Player table
-	err = db.AutoMigrate(&models.User{}, &models.Player{})
-	if err != nil {
-		log.Fatal("Failed to migrate database tables:", err)
-	}
-
 	return db
 }

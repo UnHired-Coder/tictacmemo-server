@@ -3,54 +3,10 @@ package handlers
 import (
 	"game-server/common/models"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
-// PlayerReadyToPlay adds a player to the DB when they are ready to play
-func PlayerReadyToPlay(db *gorm.DB) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var input struct {
-			UserID string `json:"user_id" binding:"required"`
-		}
-
-		// Bind the incoming JSON data
-		if err := ctx.ShouldBindJSON(&input); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-			return
-		}
-
-		// Check if the user exists in the User table
-		var user models.User
-		if err := db.Where("id = ?", input.UserID).First(&user).Error; err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-			return
-		}
-
-		// Check if the player is already in the Player table
-		var player models.Player
-		if err := db.Where("user_id = ?", input.UserID).First(&player).Error; err == nil {
-			ctx.JSON(http.StatusConflict, gin.H{"error": "Player is already in the active list"})
-			return
-		}
-
-		// Add the player to the Player table
-		player = models.Player{
-			UserID:    input.UserID,
-			CreatedAt: time.Now(),
-		}
-
-		if err := db.Create(&player).Error; err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add player to the active list"})
-			return
-		}
-
-		// Respond with success
-		ctx.JSON(http.StatusOK, gin.H{"message": "Player is ready to play", "player": player})
-	}
-}
 
 func Login(db *gorm.DB) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
