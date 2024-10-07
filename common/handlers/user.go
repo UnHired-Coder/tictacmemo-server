@@ -57,9 +57,10 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 
 		// Bind incoming request parameters
 		var userInput struct {
-			ID    string `json:"id" binding:"required"`
-			Name  string `json:"name" binding:"required"`
-			Email string `json:"email" binding:"required,email"`
+			ID       int    `json:"id" binding:"required"`
+			Name     string `json:"name" binding:"required"`
+			Email    string `json:"email" binding:"required,email"`
+			AuthType string `json:"authType" binding:"required"`
 		}
 
 		// Bind the incoming JSON payload to the userInput struct
@@ -72,9 +73,10 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		if err := db.Where("id = ?", userInput.ID).First(&user).Error; err != nil {
 			// If the user does not exist, create a new user
 			user = models.User{
-				ID:    userInput.ID,
-				Name:  userInput.Name,
-				Email: userInput.Email,
+				ID:       userInput.ID,
+				Username: userInput.Name,
+				Email:    userInput.Email,
+				AuthType: userInput.AuthType,
 			}
 			if err := db.Create(&user).Error; err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -82,7 +84,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			}
 		} else {
 			// If user exists, update their information
-			user.Name = userInput.Name
+			user.Username = userInput.Name
 			user.Email = userInput.Email
 			db.Save(&user)
 		}

@@ -6,8 +6,11 @@ import (
 
 // User struct represents the users table in the database
 type User struct {
-	ID        string `gorm:"primaryKey"`
-	Name      string
-	Email     string `gorm:"uniqueIndex"`
-	CreatedAt time.Time
+	ID        int       `json:"id" gorm:"primaryKey"`
+	Username  string    `json:"username" gorm:"index"`
+	Email     string    `json:"email" gorm:"index"`
+	AuthType  string    `json:"authType"`
+	Rating    int       `json:"rating" gorm:"index;default:1000"`
+	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 }
