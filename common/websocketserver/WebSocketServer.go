@@ -38,6 +38,9 @@ func HandleWebSocket(c *gin.Context) {
 
 	PLAYERS_WAITLIST[waitlistID] = conn
 
+	// TODO:: On receiving the room details the client
+	// will send back a message and the match will start.
+
 	// Handle incoming messages from the client
 	for {
 		// Read a message from the WebSocket connection
