@@ -8,6 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
+
 // Upgrader specifies parameters for upgrading an HTTP connection to a WebSocket connection.
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -34,21 +36,7 @@ func HandleWebSocket(c *gin.Context) {
 
 	log.Printf("Client connected: PlayerID=%s, WaitlistID=%s\n", playerID, waitlistID)
 
-	// Send the room ID, playerID, and waitlistID to the client
-	roomID := c.Query("roomID") // Assuming roomID is passed as a query param
-	welcomeMessage := map[string]string{
-		"message":    "Welcome to the WebSocket server!",
-		"playerID":   playerID,
-		"waitlistID": waitlistID,
-		"roomID":     roomID,
-	}
-
-	// Send the structured message to the client
-	err = conn.WriteJSON(welcomeMessage)
-	if err != nil {
-		log.Println("Failed to send message:", err)
-		return
-	}
+	PLAYERS_WAITLIST[waitlistID] = conn
 
 	// Handle incoming messages from the client
 	for {
