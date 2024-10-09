@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"fmt"
 	"game-server/common/models"
 	"game-server/tictacmemo/core"
+	"game-server/tictacmemo/types"
+
+	"log"
 	"net/http"
 	"time"
 
@@ -32,13 +36,36 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 		// Add player to the matchmaking system
 		mms.AddPlayer(player)
 
-		// Match players with a timeout (e.g., 30 seconds)
-		mms.MatchPlayers(3 * time.Second)
+		go startMatchMacking(ctx, mms)
 
 		// Send a response back to the client
 		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "waitlist_id": waitlistId})
 	}
 	return gin.HandlerFunc(fn)
+}
+
+func startMatchMacking(ctx *gin.Context, mms *core.MatchmakingSystem) {
+	// Match players with a timeout (e.g., 30 seconds)
+	player1, player2, err := mms.MatchPlayers(300 * time.Second)
+	if err != nil {
+		log.Fatal("Error: " + err.Error())
+	}
+
+	if player1 == nil || player2 == nil {
+		log.Fatal("Something went wrong!")
+	}
+
+	roomId := uuid.New()
+	room := types.CreateRoom(*player1, *player2)
+
+	go sendRoomId(ctx, player1, roomId.String(), room)
+	go sendRoomId(ctx, player2, roomId.String(), room)
+}
+
+func sendRoomId(ctx *gin.Context, player *models.Player, roomId string, room types.Room) {
+	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
+	log.Println("Starting socket connection on " + wsURL)
+
 }
 
 func JoinRoom(db *gorm.DB) gin.HandlerFunc {

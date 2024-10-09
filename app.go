@@ -10,9 +10,24 @@ import (
 	"os"
 	"time"
 
+	"game-server/common/websocketserver"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
+
+// handleWebSocket manages WebSocket connections with playerID and waitlistID
+func handleWebSocket(ctx *gin.Context) {
+	// Extract player ID and waitlist ID from the URL parameters
+	playerID := ctx.Param("playerID")
+	waitlistID := ctx.Param("waitlistID")
+
+	// Logging connection details
+	log.Printf("Handling WebSocket connection for playerID: %s, waitlistID: %s\n", playerID, waitlistID)
+
+	// Pass context to the WebSocket handler
+	websocketserver.HandleWebSocket(ctx)
+}
 
 func main() {
 	// Load the environment variables
@@ -34,6 +49,9 @@ func main() {
 
 	// Attach the routes from tictacmemo package
 	tictacmemo.AttachRoutes(router, db)
+
+	// General WebSocket route for handling dynamic player connections
+	router.GET("/ws/:playerID/:waitlistID", handleWebSocket)
 
 	// Start the server on the specified port
 	server := &http.Server{
