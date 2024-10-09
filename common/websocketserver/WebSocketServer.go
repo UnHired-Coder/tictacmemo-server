@@ -10,7 +10,6 @@ import (
 
 var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
 
-// Upgrader specifies parameters for upgrading an HTTP connection to a WebSocket connection.
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,

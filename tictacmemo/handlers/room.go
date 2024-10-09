@@ -18,10 +18,9 @@ import (
 
 func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
-		// Example: Retrieve user ID from the context (maybe set by middleware)
-		userId := ctx.Query("user_id")
 
-		// Example: Retrieve a user object from the database using the user ID
+		//Retrive the user
+		userId := ctx.Query("user_id")
 		var user models.User
 		if err := db.Where("id = ?", userId).First(&user).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
