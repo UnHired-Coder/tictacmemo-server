@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"game-server/common/models"
-	"game-server/common/websocketserver"
 	"game-server/tictacmemo/core"
 	"game-server/tictacmemo/types"
 
@@ -13,8 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
+
+var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
 
 func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
@@ -77,7 +79,7 @@ func sendRoomId(player *models.Player, roomId string, room types.Room) {
 
 func sendRoomDataForMatch(roomData map[string]any, attempt int, waitlistId string) {
 	if attempt < 20 {
-		connection, ok := websocketserver.PLAYERS_WAITLIST[waitlistId]
+		connection, ok := PLAYERS_WAITLIST[waitlistId]
 		if ok {
 			// Send the structured message to the client
 			err := connection.WriteJSON(roomData)

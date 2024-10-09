@@ -1,4 +1,4 @@
-package websocketserver
+package handlers
 
 import (
 	"log"
@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
-
-var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -20,7 +18,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // HandleWebSocket handles the WebSocket connection.
-func HandleWebSocket(c *gin.Context) {
+func Matching(c *gin.Context) {
 	// Upgrade the HTTP request to a WebSocket connection
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
