@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,

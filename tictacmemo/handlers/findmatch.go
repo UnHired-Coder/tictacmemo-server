@@ -11,11 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
-
-var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
 
 func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
@@ -91,11 +88,4 @@ func sendRoomDataForMatch(roomData map[string]any, attempt int, waitlistId strin
 			sendRoomDataForMatch(roomData, 1, waitlistId)
 		}
 	}
-}
-
-func JoinRoom(db *gorm.DB) gin.HandlerFunc {
-	fn := func(ctx *gin.Context) {
-
-	}
-	return gin.HandlerFunc(fn)
 }
