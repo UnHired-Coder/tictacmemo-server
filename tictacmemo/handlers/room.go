@@ -2,9 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"game-server/common/models"
+	"game-server/common/types"
 	"game-server/tictacmemo/core"
-	"game-server/tictacmemo/types"
 
 	"log"
 	"net/http"
@@ -23,14 +22,14 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 
 		//Retrive the user
 		userId := ctx.Query("user_id")
-		var user models.User
+		var user types.User
 		if err := db.Where("id = ?", userId).First(&user).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 			return
 		}
 
 		waitlistId := uuid.New()
-		player := models.Player{
+		player := types.Player{
 			User:       user,
 			WaitlistId: waitlistId.String(),
 		}
@@ -64,7 +63,7 @@ func startMatchMacking(mms *core.MatchmakingSystem) {
 	go sendRoomId(player2, roomId.String(), room)
 }
 
-func sendRoomId(player *models.Player, roomId string, room types.Room) {
+func sendRoomId(player *types.Player, roomId string, room types.Room) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
 	log.Println("Joining room on: " + wsURL)
 

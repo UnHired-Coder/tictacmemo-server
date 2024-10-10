@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"game-server/common/models"
+	"game-server/common/types"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -25,10 +25,10 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		// Check if the user already exists in the database
-		var user models.User
+		var user types.User
 		if err := db.Where("id = ?", userInput.ID).First(&user).Error; err != nil {
 			// If the user does not exist, create a new user
-			user = models.User{
+			user = types.User{
 				ID:       userInput.ID,
 				Username: userInput.Name,
 				Email:    userInput.Email,

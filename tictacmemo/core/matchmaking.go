@@ -2,7 +2,7 @@ package core
 
 import (
 	"errors"
-	"game-server/common/models"
+	"game-server/common/types"
 	"sort"
 	"sync"
 	"time"
@@ -10,17 +10,17 @@ import (
 
 // MatchmakingSystem holds the sorted list of players and a mutex for thread safety.
 type MatchmakingSystem struct {
-	players []models.Player
+	players []types.Player
 	mutex   sync.Mutex
 }
 
 func NewMatchmakingSystem() *MatchmakingSystem {
 	return &MatchmakingSystem{
-		players: []models.Player{},
+		players: []types.Player{},
 	}
 }
 
-func (ms *MatchmakingSystem) AddPlayer(player models.Player) {
+func (ms *MatchmakingSystem) AddPlayer(player types.Player) {
 	ms.mutex.Lock()
 	defer ms.mutex.Unlock()
 	ms.players = append(ms.players, player)
@@ -30,7 +30,7 @@ func (ms *MatchmakingSystem) AddPlayer(player models.Player) {
 }
 
 // MatchPlayers tries to find a match for two players with similar ratings within a specified timeout.
-func (ms *MatchmakingSystem) MatchPlayers(timeout time.Duration) (*models.Player, *models.Player, error) {
+func (ms *MatchmakingSystem) MatchPlayers(timeout time.Duration) (*types.Player, *types.Player, error) {
 	expiry := time.Now().Add(timeout)
 
 	for {

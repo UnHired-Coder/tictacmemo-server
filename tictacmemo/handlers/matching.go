@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"game-server/common/models"
+	"game-server/common/types"
 	"log"
 	"net/http"
 
@@ -34,7 +34,7 @@ func Matching(db *gorm.DB) gin.HandlerFunc {
 		playerID := c.Param("playerID")
 		waitlistID := c.Param("waitlistID")
 
-		var user models.User
+		var user types.User
 		if err := db.Where("id = ?", playerID).First(&user).Error; err != nil {
 			sendWebSocketError(conn, "User not found.")
 			return

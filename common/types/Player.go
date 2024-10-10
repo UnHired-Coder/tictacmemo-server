@@ -1,4 +1,4 @@
-package models
+package types
 
 type Player struct {
 	User              // Embedding User struct
