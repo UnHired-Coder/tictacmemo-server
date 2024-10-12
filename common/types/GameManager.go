@@ -22,18 +22,22 @@ func NewGameManager() *GameManager {
 }
 
 // CreateRoom creates a new room and returns the room's UUID
-func (gm *GameManager) CreateRoom(maxPlayers int) (uuid.UUID, error) {
+func (gm *GameManager) CreateRoom(maxPlayers int) (uuid.UUID, *Room, error) {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
 	// Generate a new UUID for the room
 	roomID := uuid.New()
 
-	// Create and store the new room
-	gm.Rooms[roomID] = CreateRoom(maxPlayers)
+	// Create the new room
+	room := CreateRoom(maxPlayers, roomID)
+
+	// Store the room in the GameManager's map
+	gm.Rooms[roomID] = room
 	fmt.Printf("Created new Room with Room ID %s\n", roomID)
 
-	return roomID, nil
+	// Return the roomID and the room itself
+	return roomID, room, nil
 }
 
 // RemoveRoom removes the room from the GameManager once the game ends

@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/google/uuid" // Import the UUID package
 )
 
 // Room struct that represents a room that can hold any number of players
 type Room struct {
-	ID         int       `json:"id" gorm:"primaryKey"`
+	ID         uuid.UUID `json:"room_id" gorm:"primaryKey"`
 	Players    []*User   `json:"players"`    // Dynamic list of players
 	MaxPlayers int       `json:"maxPlayers"` // Max number of players allowed in the room
 	CreatedAt  time.Time `json:"createdAt" gorm:"autoCreateTime"`
@@ -17,8 +19,9 @@ type Room struct {
 }
 
 // CreateRoom initializes a new room with a specified max number of players
-func CreateRoom(maxPlayers int) *Room {
+func CreateRoom(maxPlayers int, roomID uuid.UUID) *Room {
 	return &Room{
+		ID:         roomID,
 		MaxPlayers: maxPlayers,
 		Players:    []*User{},
 		CreatedAt:  time.Now(),

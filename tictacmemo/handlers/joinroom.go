@@ -4,19 +4,20 @@ import (
 	commonTypes "game-server/common/types"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func JoinRoom(db *gorm.DB, gameManager *commonTypes.GameManager) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 		playerID := ctx.Param("playerID")
-		roomID, err := strconv.Atoi(ctx.Param("roomID"))
-
+		// Parse and validate the UUID
+		roomID, err := uuid.Parse(ctx.Param("roomID"))
 		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"message": "Invalid Player id: " + playerID})
+			// Return a JSON error response if the UUID is invalid
+			ctx.JSON(http.StatusBadRequest, gin.H{"message": "Invalid room ID: " + roomID.String()})
 			return
 		}
 
@@ -29,7 +30,7 @@ func JoinRoom(db *gorm.DB, gameManager *commonTypes.GameManager) gin.HandlerFunc
 		}
 
 		// Check if the room exists in the gameManager
-		err = gameManager.JoinRoom(&user, roomID, 2)
+		err = gameManager.JoinRoom(&user, roomID)
 		if err != nil {
 			log.Printf("Room with ID %d not found", roomID)
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err})

@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	commonTypes "game-server/common/types"
-	tictacmemoTypes "game-server/tictacmemo/types"
 
 	"game-server/tictacmemo/core"
 
@@ -55,14 +54,19 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *commonTypes.Gam
 		log.Fatal("Something went wrong!")
 	}
 
-	room := tictacmemoTypes.NewTicTacMemoRoom(2)
-	roomId := room.Room.ID
+	// Now we have enough players, create a room
+
+	MAX_PLAYERS_TIC_TAC_MEMEO := 2
+	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO)
+	if err != nil {
+		log.Println("Failed to Create Room:", err)
+	}
 
 	go sendRoomId(player1, roomId, room)
 	go sendRoomId(player2, roomId, room)
 }
 
-func sendRoomId(player *commonTypes.Player, roomId int, room *tictacmemoTypes.TicTacMemoRoom) {
+func sendRoomId(player *commonTypes.Player, roomId uuid.UUID, room *commonTypes.Room) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
 	log.Println("Joining room on: " + wsURL)
 
