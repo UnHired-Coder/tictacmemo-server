@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"game-server/common/types"
+	commonTypes "game-server/common/types"
+	tictacmemoTypes "game-server/tictacmemo/types"
+
 	"game-server/tictacmemo/core"
 
 	"log"
@@ -14,19 +16,19 @@ import (
 	"gorm.io/gorm"
 )
 
-func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
+func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *commonTypes.GameManager) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 
 		//Retrive the user
 		userId := ctx.Query("user_id")
-		var user types.User
+		var user commonTypes.User
 		if err := db.Where("id = ?", userId).First(&user).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 			return
 		}
 
 		waitlistId := uuid.New()
-		player := types.Player{
+		player := commonTypes.Player{
 			User:       user,
 			WaitlistId: waitlistId.String(),
 		}
@@ -34,7 +36,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 		// Add player to the matchmaking system
 		mms.AddPlayer(player)
 
-		go startMatchMacking(mms)
+		go startMatchMacking(mms, gameManager)
 
 		// Send a response back to the client
 		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "waitlist_id": waitlistId})
@@ -42,7 +44,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem) gin.HandlerFunc {
 	return gin.HandlerFunc(fn)
 }
 
-func startMatchMacking(mms *core.MatchmakingSystem) {
+func startMatchMacking(mms *core.MatchmakingSystem, gameManager *commonTypes.GameManager) {
 	// Match players with a timeout (e.g., 30 seconds)
 	player1, player2, err := mms.MatchPlayers(300 * time.Second)
 	if err != nil {
@@ -53,21 +55,21 @@ func startMatchMacking(mms *core.MatchmakingSystem) {
 		log.Fatal("Something went wrong!")
 	}
 
-	roomId := uuid.New()
-	room := types.CreateRoom()
+	room := tictacmemoTypes.NewTicTacMemoRoom(2)
+	roomId := room.Room.ID
 
-	go sendRoomId(player1, roomId.String(), room)
-	go sendRoomId(player2, roomId.String(), room)
+	go sendRoomId(player1, roomId, room)
+	go sendRoomId(player2, roomId, room)
 }
 
-func sendRoomId(player *types.Player, roomId string, room types.Room) {
+func sendRoomId(player *commonTypes.Player, roomId int, room *tictacmemoTypes.TicTacMemoRoom) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
 	log.Println("Joining room on: " + wsURL)
 
 	roomData := map[string]any{
 		"playerID": player.ID,
 		"roomID":   roomId,
-		"room":     room,
+		"room":     &room,
 	}
 
 	sendRoomDataForMatch(roomData, 1, player.WaitlistId)

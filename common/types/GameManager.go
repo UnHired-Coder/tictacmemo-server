@@ -7,24 +7,24 @@ import (
 
 // GameManager struct manages all active game rooms
 type GameManager struct {
-	rooms map[int]*Room // Manages generic rooms
-	lock  sync.Mutex    // Mutex for concurrent access
+	Rooms map[int]*Room // Manages generic rooms
+	Lock  sync.Mutex    // Mutex for concurrent access
 }
 
 // NewGameManager creates a new GameManager
 func NewGameManager() *GameManager {
 	return &GameManager{
-		rooms: make(map[int]*Room), // Initialize the rooms map
+		Rooms: make(map[int]*Room), // Initialize the rooms map
 	}
 }
 
 // RemoveRoom removes the room from the GameManager once the game ends
 func (gm *GameManager) RemoveRoom(roomID int) {
-	gm.lock.Lock()
-	defer gm.lock.Unlock()
+	gm.Lock.Lock()
+	defer gm.Lock.Unlock()
 
-	if _, exists := gm.rooms[roomID]; exists {
-		delete(gm.rooms, roomID)
+	if _, exists := gm.Rooms[roomID]; exists {
+		delete(gm.Rooms, roomID)
 		fmt.Printf("Room with ID %d has been removed from GameManager\n", roomID)
 	} else {
 		fmt.Printf("Room with ID %d does not exist\n", roomID)
@@ -33,15 +33,15 @@ func (gm *GameManager) RemoveRoom(roomID int) {
 
 // JoinRoom allows a player to join a room. If the room doesn't exist, it creates a new one.
 func (gm *GameManager) JoinRoom(player *User, roomID int, maxPlayers int) error {
-	gm.lock.Lock()
-	defer gm.lock.Unlock()
+	gm.Lock.Lock()
+	defer gm.Lock.Unlock()
 
 	// Check if the room exists, if not create it
-	room, exists := gm.rooms[roomID]
+	room, exists := gm.Rooms[roomID]
 	if !exists {
 		// Create a new Room (e.g., for TicTacMemoRoom, max players = 2)
 		room = CreateRoom(maxPlayers)
-		gm.rooms[roomID] = room
+		gm.Rooms[roomID] = room
 		fmt.Printf("Created new Room with Room ID %d\n", roomID)
 	}
 

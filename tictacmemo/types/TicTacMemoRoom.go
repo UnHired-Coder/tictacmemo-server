@@ -8,16 +8,15 @@ import (
 
 // TicTacMemoRoom struct extends Room and implements Tic-Tac-Toe-specific logic
 type TicTacMemoRoom struct {
-	types.Room                     // Embedding Room to reuse the generic player management
-	Board       [3][3]int          // Tic-Tac-Toe-specific board
-	CurrentTurn int                // Tracks which player’s turn it is
-	GameManager *types.GameManager // Reference to GameManager for room removal
+	types.Room            // Embedding Room to reuse the generic player management
+	Board       [3][3]int // Tic-Tac-Toe-specific board
+	CurrentTurn int       // Tracks which player’s turn it is
 }
 
 // NewTicTacMemoRoom creates a new TicTacMemoRoom
-func NewTicTacMemoRoom(int) *TicTacMemoRoom {
+func NewTicTacMemoRoom(maxPlayers int) *TicTacMemoRoom {
 	return &TicTacMemoRoom{
-		Room: *types.CreateRoom(2), // Only two players for Tic-Tac-Toe
+		Room: *types.CreateRoom(maxPlayers), // Only two players for Tic-Tac-Toe
 	}
 }
 
@@ -73,27 +72,3 @@ func (r *TicTacMemoRoom) switchTurn() {
 		r.CurrentTurn = 1
 	}
 }
-
-func (r *TicTacMemoRoom) endGame() {
-	// Call GameManager to remove the room
-	r.GameManager.RemoveRoom(r.ID)
-}
-
-// CreateTicTacMemoRoom creates a TicTacMemoRoom for a two-player game
-// func CreateTicTacMemoRoom(gm *types.GameManager, roomID int) *TicTacMemoRoom {
-// 	gm.lock.Lock()
-// 	defer gm.lock.Unlock()
-
-// 	// Check if the room already exists
-// 	if _, exists := gm.rooms[roomID]; exists {
-// 		fmt.Printf("Room with ID %d already exists\n", roomID)
-// 		return nil
-// 	}
-
-// 	// Create a new TicTacMemoRoom and register it in the manager
-// 	ticTacToeRoom := NewTicTacMemoRoom(roomID)
-// 	gm.rooms[roomID] = &ticTacToeRoom.Room
-
-// 	fmt.Printf("Created new TicTacMemoRoom with Room ID %d\n", roomID)
-// 	return ticTacToeRoom
-// }

@@ -1,6 +1,7 @@
 package tictacmemo
 
 import (
+	"game-server/common/types"
 	"game-server/tictacmemo/handlers"
 
 	"github.com/gin-gonic/gin"
@@ -9,6 +10,7 @@ import (
 
 func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 
+	gameManager := types.NewGameManager()
 	mms := InitMatchMaking()
 
 	this := router.Group("/tictacmemo")
@@ -16,7 +18,7 @@ func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		this.POST("/join-room/:playerID/:roomID", handlers.JoinRoom(db))
 		this.POST("/update-score", handlers.UpdateScore(db))
-		this.POST("/find-match", handlers.FindMatch(db, mms))
+		this.POST("/find-match", handlers.FindMatch(db, mms, gameManager))
 		this.GET("/find-match/:playerID/:waitlistID", handlers.Matching(db))
 	}
 }
