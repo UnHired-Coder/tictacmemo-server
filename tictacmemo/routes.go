@@ -16,7 +16,7 @@ func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	this := router.Group("/tictacmemo")
 
 	{
-		this.POST("/join-room/:playerID/:roomID", handlers.JoinRoom(db))
+		this.POST("/join-room/:playerID/:roomID", handlers.JoinRoom(db, gameManager))
 		this.POST("/update-score", handlers.UpdateScore(db))
 		this.POST("/find-match", handlers.FindMatch(db, mms, gameManager))
 		this.GET("/find-match/:playerID/:waitlistID", handlers.Matching(db))
