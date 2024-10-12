@@ -54,7 +54,7 @@ func startMatchMacking(mms *core.MatchmakingSystem) {
 	}
 
 	roomId := uuid.New()
-	room := types.CreateRoom(*player1, *player2)
+	room := types.CreateRoom()
 
 	go sendRoomId(player1, roomId.String(), room)
 	go sendRoomId(player2, roomId.String(), room)
