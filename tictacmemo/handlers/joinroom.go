@@ -2,6 +2,7 @@ package handlers
 
 import (
 	commonTypes "game-server/common/types"
+	"game-server/tictacmemo/types"
 	"log"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func JoinRoom(db *gorm.DB, gameManager *commonTypes.GameManager) gin.HandlerFunc {
+func JoinRoom(db *gorm.DB, gameManager *types.TicTacMemoGameManager) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 		playerID := ctx.Param("playerID")
 		// Parse and validate the UUID
@@ -30,7 +31,12 @@ func JoinRoom(db *gorm.DB, gameManager *commonTypes.GameManager) gin.HandlerFunc
 		}
 
 		// Check if the room exists in the gameManager
-		err = gameManager.JoinRoom(&user, roomID)
+
+		joinFunc := func(room *types.TicTacMemoRoom, player *commonTypes.User) error {
+			return room.JoinRoom(player)
+		}
+
+		err = gameManager.JoinRoom(&user, roomID, joinFunc)
 		if err != nil {
 			log.Printf("Room with ID %d not found", roomID)
 			ctx.JSON(http.StatusNotFound, gin.H{"error": err})

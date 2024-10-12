@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid" // Import the UUID package
 )
 
+// Define an interface that both Base and Derived will adhere to
+type IStartGame interface {
+	StartGame()
+}
+
 // Room struct that represents a room that can hold any number of players
 type Room struct {
 	ID         uuid.UUID `json:"room_id" gorm:"primaryKey"`
@@ -16,6 +21,8 @@ type Room struct {
 	CreatedAt  time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt  time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	Mutex      sync.Mutex
+
+	OnStartGame IStartGame `json:"-"`
 }
 
 // CreateRoom initializes a new room with a specified max number of players
@@ -30,29 +37,31 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID) *Room {
 }
 
 // JoinRoom adds a player to the room if there is space
-func (r *Room) JoinRoom(player *User) error {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
+func (room *Room) JoinRoom(player *User) error {
+	room.Mutex.Lock()
+	defer room.Mutex.Unlock()
 
-	if len(r.Players) >= r.MaxPlayers {
+	if len(room.Players) >= room.MaxPlayers {
 		return fmt.Errorf("room is full")
 	}
 
-	r.Players = append(r.Players, player)
-	fmt.Printf("Player (%s) joined Room %d\n", player.Username, r.ID)
+	room.Players = append(room.Players, player)
+	fmt.Printf("Player (%s) joined Room %d\n", player.Username, room.ID)
 
-	r.UpdatedAt = time.Now()
+	room.UpdatedAt = time.Now()
 
 	// If the room is full, you can start the game or notify the players
-	if len(r.Players) == r.MaxPlayers {
-		r.StartGame()
+	if len(room.Players) == room.MaxPlayers {
+		room.StartGame()
 	}
 
 	return nil
 }
 
 // StartGame starts the game when all players have joined
-func (r *Room) StartGame() {
-	fmt.Printf("Starting the game in Room %d with %d players\n", r.ID, len(r.Players))
+func (room *Room) StartGame() {
+	fmt.Printf("Begning to start %d with %d players\n", room.ID, len(room.Players))
 	// Game-specific logic will go in the derived game room
+
+	room.OnStartGame.StartGame()
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	commonTypes "game-server/common/types"
+	"game-server/tictacmemo/types"
 
 	"game-server/tictacmemo/core"
 
@@ -15,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *commonTypes.GameManager) gin.HandlerFunc {
+func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicTacMemoGameManager) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 
 		//Retrive the user
@@ -43,7 +44,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *commonType
 	return gin.HandlerFunc(fn)
 }
 
-func startMatchMacking(mms *core.MatchmakingSystem, gameManager *commonTypes.GameManager) {
+func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMemoGameManager) {
 	// Match players with a timeout (e.g., 30 seconds)
 	player1, player2, err := mms.MatchPlayers(300 * time.Second)
 	if err != nil {
@@ -66,7 +67,7 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *commonTypes.Gam
 	go sendRoomId(player2, roomId, room)
 }
 
-func sendRoomId(player *commonTypes.Player, roomId uuid.UUID, room *commonTypes.Room) {
+func sendRoomId(player *commonTypes.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
 	log.Println("Joining room on: " + wsURL)
 

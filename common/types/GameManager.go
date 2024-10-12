@@ -8,29 +8,26 @@ import (
 	"github.com/google/uuid" // Import the UUID package
 )
 
-// GameManager struct manages all active game rooms
-type GameManager struct {
-	Rooms map[uuid.UUID]*Room // Manages generic rooms using UUID as keys
-	Lock  sync.Mutex          // Mutex for concurrent access
+// GameManager struct manages all active game rooms using generics
+type GameManager[T any] struct {
+	Rooms map[uuid.UUID]*T // Manages generic rooms using UUID as keys
+	Lock  sync.Mutex       // Mutex for concurrent access
 }
 
 // NewGameManager creates a new GameManager
-func NewGameManager() *GameManager {
-	return &GameManager{
-		Rooms: make(map[uuid.UUID]*Room), // Initialize the rooms map with UUID keys
+func NewGameManager[T any]() *GameManager[T] {
+	return &GameManager[T]{
+		Rooms: make(map[uuid.UUID]*T), // Initialize the rooms map with UUID keys
 	}
 }
 
 // CreateRoom creates a new room and returns the room's UUID
-func (gm *GameManager) CreateRoom(maxPlayers int) (uuid.UUID, *Room, error) {
+func (gm *GameManager[T]) CreateRoom(room *T) (uuid.UUID, *T, error) {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
 	// Generate a new UUID for the room
 	roomID := uuid.New()
-
-	// Create the new room
-	room := CreateRoom(maxPlayers, roomID)
 
 	// Store the room in the GameManager's map
 	gm.Rooms[roomID] = room
@@ -41,7 +38,7 @@ func (gm *GameManager) CreateRoom(maxPlayers int) (uuid.UUID, *Room, error) {
 }
 
 // RemoveRoom removes the room from the GameManager once the game ends
-func (gm *GameManager) RemoveRoom(roomID uuid.UUID) {
+func (gm *GameManager[T]) RemoveRoom(roomID uuid.UUID) {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
@@ -54,7 +51,7 @@ func (gm *GameManager) RemoveRoom(roomID uuid.UUID) {
 }
 
 // JoinRoom allows a player to join a room. Throws an error if the room doesn't exist.
-func (gm *GameManager) JoinRoom(player *User, roomID uuid.UUID) error {
+func (gm *GameManager[T]) JoinRoom(player *User, roomID uuid.UUID, joinFunc func(room *T, player *User) error) error {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
@@ -64,8 +61,8 @@ func (gm *GameManager) JoinRoom(player *User, roomID uuid.UUID) error {
 		return errors.New(fmt.Sprintf("room with ID %s does not exist", roomID))
 	}
 
-	// Let the player join the room
-	err := room.JoinRoom(player)
+	// Let the player join the room using the provided join function
+	err := joinFunc(room, player)
 	if err != nil {
 		return fmt.Errorf("error joining room: %v", err)
 	}

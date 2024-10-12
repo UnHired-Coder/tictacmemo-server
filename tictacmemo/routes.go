@@ -1,8 +1,8 @@
 package tictacmemo
 
 import (
-	"game-server/common/types"
 	"game-server/tictacmemo/handlers"
+	"game-server/tictacmemo/types"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -10,7 +10,7 @@ import (
 
 func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 
-	gameManager := types.NewGameManager()
+	gameManager := types.NewTicTacMemoGameManager()
 	mms := InitMatchMaking()
 
 	this := router.Group("/tictacmemo")
