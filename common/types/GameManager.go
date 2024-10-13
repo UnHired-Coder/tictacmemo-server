@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/google/uuid" // Import the UUID package
+	"github.com/google/uuid"
 )
 
 // GameManager struct manages all active game rooms using generics
@@ -14,26 +14,21 @@ type GameManager[T any] struct {
 	Lock  sync.Mutex       // Mutex for concurrent access
 }
 
-// NewGameManager creates a new GameManager
 func NewGameManager[T any]() *GameManager[T] {
 	return &GameManager[T]{
-		Rooms: make(map[uuid.UUID]*T), // Initialize the rooms map with UUID keys
+		Rooms: make(map[uuid.UUID]*T),
 	}
 }
 
 // CreateRoom creates a new room and returns the room's UUID
-func (gm *GameManager[T]) CreateRoom(room *T) (uuid.UUID, *T, error) {
+func (gm *GameManager[T]) CreateRoom(roomID uuid.UUID, room *T) (uuid.UUID, *T, error) {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
-	// Generate a new UUID for the room
-	roomID := uuid.New()
-
-	// Store the room in the GameManager's map
+	// Store the Room in GameManager
 	gm.Rooms[roomID] = room
 	fmt.Printf("Created new Room with Room ID %s\n", roomID)
 
-	// Return the roomID and the room itself
 	return roomID, room, nil
 }
 
@@ -51,21 +46,21 @@ func (gm *GameManager[T]) RemoveRoom(roomID uuid.UUID) {
 }
 
 // JoinRoom allows a player to join a room. Throws an error if the room doesn't exist.
-func (gm *GameManager[T]) JoinRoom(player *User, roomID uuid.UUID, joinFunc func(room *T, player *User) error) error {
+func (gm *GameManager[T]) JoinRoom(player *User, roomID uuid.UUID, joinFunc func(room *T, player *User) error) (*T, error) {
 	gm.Lock.Lock()
 	defer gm.Lock.Unlock()
 
 	// Check if the room exists, if not return an error
 	room, exists := gm.Rooms[roomID]
 	if !exists {
-		return errors.New(fmt.Sprintf("room with ID %s does not exist", roomID))
+		return nil, errors.New(fmt.Sprintf("room with ID %s does not exist", roomID))
 	}
 
 	// Let the player join the room using the provided join function
 	err := joinFunc(room, player)
 	if err != nil {
-		return fmt.Errorf("error joining room: %v", err)
+		return nil, fmt.Errorf("error joining room: %v", err)
 	}
 
-	return nil
+	return room, nil
 }

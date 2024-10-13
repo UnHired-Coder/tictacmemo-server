@@ -3,19 +3,15 @@ package types
 import (
 	"fmt"
 	"game-server/common/types"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type TicTacMemoRoom struct {
 	types.Room
-}
-
-// StartGame starts the game when all players have joined
-func (room *TicTacMemoRoom) StartGame() {
-	fmt.Printf("Starting the game in Room %d with %d players\n", room.ID, len(room.Players))
-	// Game-specific logic will go in the derived game room
 }
 
 func CreateRoom(maxPlayers int, roomID uuid.UUID) *TicTacMemoRoom {
@@ -28,4 +24,13 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID) *TicTacMemoRoom {
 			UpdatedAt:  time.Now(),
 		},
 	}
+}
+
+func (room *TicTacMemoRoom) StartGame() {
+	fmt.Printf("Starting the game in Room %d with %d players\n", room.ID, len(room.Players))
+
+}
+
+func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData) {
+	log.Printf("Make move: posX: %d, posY: %d", makeMoveData.PosX, makeMoveData.PosY)
 }

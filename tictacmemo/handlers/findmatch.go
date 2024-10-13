@@ -19,7 +19,6 @@ import (
 func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicTacMemoGameManager) gin.HandlerFunc {
 	fn := func(ctx *gin.Context) {
 
-		//Retrive the user
 		userId := ctx.Query("user_id")
 		var user commonTypes.User
 		if err := db.Where("id = ?", userId).First(&user).Error; err != nil {
@@ -38,7 +37,6 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 
 		go startMatchMacking(mms, gameManager)
 
-		// Send a response back to the client
 		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "waitlist_id": waitlistId})
 	}
 	return gin.HandlerFunc(fn)
@@ -55,14 +53,13 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 		log.Fatal("Something went wrong!")
 	}
 
-	// Now we have enough players, create a room
-
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
 	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO)
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
 	}
 
+	// Now we have enough players, emit room Id over the websocket
 	go sendRoomId(player1, roomId, room)
 	go sendRoomId(player2, roomId, room)
 }
@@ -84,13 +81,14 @@ func sendRoomDataForMatch(roomData map[string]any, attempt int, waitlistId strin
 	if attempt < 20 {
 		connection, ok := PLAYERS_WAITLIST[waitlistId]
 		if ok {
-			// Send the structured message to the client
+
 			err := connection.WriteJSON(roomData)
 			if err != nil {
 				log.Println("Failed to send message:", err)
 			}
 		} else {
-			log.Println("Connection not established yet")
+
+			log.Println("Waiting for other player to join...")
 			time.Sleep(2 * time.Second)
 			sendRoomDataForMatch(roomData, 1, waitlistId)
 		}
