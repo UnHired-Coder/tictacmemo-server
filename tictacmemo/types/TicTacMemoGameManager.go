@@ -38,6 +38,11 @@ func (gm *TicTacMemoGameManager) JoinRoom(db *gorm.DB, roomData JoinRoomData) (*
 	}
 
 	joinFunc := func(room *TicTacMemoRoom, player *commonTypes.User) error {
+		for i := range room.Players {
+			if room.Players[i].ID == player.ID {
+				return fmt.Errorf("Player already joined!")
+			}
+		}
 		return room.JoinRoom(player)
 	}
 
