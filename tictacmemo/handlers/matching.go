@@ -91,10 +91,12 @@ func processWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManag
 			return
 		}
 
-		gameManager.Rooms[makeMoveData.RoomID].MakeMove(db, makeMoveData)
+		room := gameManager.Rooms[makeMoveData.RoomID]
+		room.MakeMove(db, makeMoveData)
 
-		response := fmt.Sprintf("User successfully joined room %s", gameManager.Rooms[makeMoveData.RoomID].ID)
-		conn.WriteMessage(websocket.TextMessage, []byte(response))
+		// Send the updated game state to the client
+		gameStateJson, _ := json.Marshal(room.GameState)
+		conn.WriteMessage(websocket.TextMessage, gameStateJson)
 
 	default:
 		log.Println("Unknown action:", message.Action)

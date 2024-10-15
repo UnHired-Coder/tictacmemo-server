@@ -17,7 +17,7 @@ type IStartGame interface {
 type Room struct {
 	ID         uuid.UUID `json:"room_id" gorm:"primaryKey"`
 	Players    []*User   `json:"players"`    // Dynamic list of players
-	MaxPlayers int       `json:"maxPlayers"` // Max number of players allowed in the room
+	MaxPlayers int       `json:"maxPlayers"` // Max number of players allowed in the room // This can be removed
 	CreatedAt  time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt  time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	Mutex      sync.Mutex

@@ -2,7 +2,7 @@ package core
 
 import (
 	"errors"
-	"game-server/common/types"
+	"game-server/tictacmemo/types"
 	"sort"
 	"sync"
 	"time"

@@ -27,7 +27,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 		}
 
 		waitlistId := uuid.New()
-		player := commonTypes.Player{
+		player := types.Player{
 			User:       user,
 			WaitlistId: waitlistId.String(),
 		}
@@ -37,7 +37,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 
 		go startMatchMacking(mms, gameManager)
 
-		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "waitlist_id": waitlistId})
+		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "player": player})
 	}
 	return gin.HandlerFunc(fn)
 }
@@ -54,9 +54,20 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	}
 
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
-	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO)
+	players := []*types.Player{player1, player2}
+
+	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, players)
+
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
+	}
+
+	player1.InitialGameData = &types.InitialGameData{
+		AssignedLable: "X",
+	}
+
+	player2.InitialGameData = &types.InitialGameData{
+		AssignedLable: "O",
 	}
 
 	// Now we have enough players, emit room Id over the websocket
@@ -64,14 +75,14 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	go sendRoomId(player2, roomId, room)
 }
 
-func sendRoomId(player *commonTypes.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
+func sendRoomId(player *types.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
 	log.Println("Joining room on: " + wsURL)
 
 	roomData := map[string]any{
-		"playerID": player.ID,
-		"roomID":   roomId,
-		"room":     &room,
+		"roomID": roomId,
+		"room":   &room,
+		"player": player,
 	}
 
 	sendRoomDataForMatch(roomData, 1, player.WaitlistId)
