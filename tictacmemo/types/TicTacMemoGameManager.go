@@ -19,9 +19,9 @@ func NewTicTacMemoGameManager() *TicTacMemoGameManager {
 	}
 }
 
-func (gm *TicTacMemoGameManager) CreateRoom(maxPlayers int) (uuid.UUID, *TicTacMemoRoom, error) {
+func (gm *TicTacMemoGameManager) CreateRoom(maxPlayers int, playerXID int, playerOID int) (uuid.UUID, *TicTacMemoRoom, error) {
 	roomID := uuid.New()
-	room := CreateRoom(maxPlayers, roomID)
+	room := CreateRoom(maxPlayers, roomID, playerXID, playerOID)
 	gm.GameManager.CreateRoom(room.ID, room)
 	room.Room.OnStartGame = room
 

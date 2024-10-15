@@ -92,7 +92,7 @@ func processWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManag
 		}
 
 		room := gameManager.Rooms[makeMoveData.RoomID]
-		room.MakeMove(db, makeMoveData)
+		room.MakeMove(db, makeMoveData, makeMoveData.PlayerID)
 
 		// Send the updated game state to the client
 		gameStateJson, _ := json.Marshal(room.GameState)

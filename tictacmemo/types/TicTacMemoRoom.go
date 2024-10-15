@@ -11,7 +11,8 @@ import (
 )
 
 type GameState struct {
-	Board         [3][3]string `json:"board"`
+	Board         [3][3]string `json:"board"`         // Actual board with X's and O's
+	VisibleBoard  [3][3]string `json:"visible_board"` // Board with hidden moves for users
 	CurrentPlayer string       `json:"current_player"`
 	Winner        string       `json:"winner"`
 	IsDraw        bool         `json:"is_draw"`
@@ -21,12 +22,18 @@ type TicTacMemoRoom struct {
 	types.Room
 	GameState   GameState
 	CurrentTurn string
+	PlayerIDs   map[string]int // Mapping of X or O to playerID
 }
 
 // CreateRoom initializes a TicTacMemoRoom with a given maxPlayers and roomID.
-func CreateRoom(maxPlayers int, roomID uuid.UUID) *TicTacMemoRoom {
+func CreateRoom(maxPlayers int, roomID uuid.UUID, playerXID int, playerOID int) *TicTacMemoRoom {
 	// Empty 3x3 board for TicTacToe game
 	board := [3][3]string{
+		{"", "", ""},
+		{"", "", ""},
+		{"", "", ""},
+	}
+	visibleBoard := [3][3]string{
 		{"", "", ""},
 		{"", "", ""},
 		{"", "", ""},
@@ -42,11 +49,16 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID) *TicTacMemoRoom {
 		},
 		GameState: GameState{
 			Board:         board,
+			VisibleBoard:  visibleBoard,
 			CurrentPlayer: "X", // X always starts
 			Winner:        "",
 			IsDraw:        false,
 		},
 		CurrentTurn: "X",
+		PlayerIDs: map[string]int{
+			"X": playerXID,
+			"O": playerOID,
+		},
 	}
 }
 
@@ -55,6 +67,7 @@ func (room *TicTacMemoRoom) StartGame() {
 	fmt.Printf("Starting the game in Room %d with %d players\n", room.ID, len(room.Players))
 	room.GameState = GameState{
 		Board:         [3][3]string{},
+		VisibleBoard:  [3][3]string{},
 		CurrentPlayer: "X",
 		Winner:        "",
 		IsDraw:        false,
@@ -63,16 +76,33 @@ func (room *TicTacMemoRoom) StartGame() {
 }
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
-func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData) {
+func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, playerID int) {
 	posX, posY := makeMoveData.PosX, makeMoveData.PosY
 
+	// Validate the current player
+	if room.PlayerIDs[room.CurrentTurn] != playerID {
+		log.Printf("Invalid move by player %d. Not your turn!", playerID)
+		return
+	}
+
+	// Validate if the move is within the bounds of the board
+	if posX < 0 || posX > 2 || posY < 0 || posY > 2 {
+		log.Printf("Invalid move at position (%d, %d). Out of bounds.", posX, posY)
+		return
+	}
+
+	// Validate if the position is already taken
 	if room.GameState.Board[posX][posY] != "" {
 		log.Printf("Invalid move at position (%d, %d). Spot already taken.", posX, posY)
 		return
 	}
 
-	// Mark the move on the board
+	// Mark the move on the actual board
 	room.GameState.Board[posX][posY] = room.CurrentTurn
+
+	// Update the visible board (hide the actual move)
+	room.GameState.VisibleBoard[posX][posY] = "?"
+
 	log.Printf("Move made by player %s at position (%d, %d)", room.CurrentTurn, posX, posY)
 
 	// Check for win or draw
