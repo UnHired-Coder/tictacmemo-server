@@ -24,7 +24,7 @@ type TicTacMemoRoom struct {
 }
 
 // CreateRoom initializes a TicTacMemoRoom with a given maxPlayers and roomID.
-func CreateRoom(maxPlayers int, roomID uuid.UUID, players []*Player) *TicTacMemoRoom {
+func CreateRoom(maxPlayers int, roomID uuid.UUID) *TicTacMemoRoom {
 	// Empty 3x3 board for TicTacToe game
 	board := [3][3]string{
 		{"", "", ""},
@@ -36,7 +36,7 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID, players []*Player) *TicTacMemo
 		Room: types.Room{
 			ID:         roomID,
 			MaxPlayers: maxPlayers,
-			Players:    mapPlayersToUsers(players),
+			Players:    []*types.User{},
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		},
@@ -48,15 +48,6 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID, players []*Player) *TicTacMemo
 		},
 		CurrentTurn: "X",
 	}
-}
-
-func mapPlayersToUsers(playerList []*Player) []*types.User {
-	var userList []*types.User
-	for _, player := range playerList {
-		user := player.User
-		userList = append(userList, &user)
-	}
-	return userList
 }
 
 // StartGame starts the TicTacToe game, resetting the board and setting the first turn.
@@ -73,31 +64,31 @@ func (room *TicTacMemoRoom) StartGame() {
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
 func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData) {
-	// posX, posY := makeMoveData.PosX, makeMoveData.PosY
+	posX, posY := makeMoveData.PosX, makeMoveData.PosY
 
-	// if room.GameState.Board[posX][posY] != "" {
-	// 	log.Printf("Invalid move at position (%d, %d). Spot already taken.", posX, posY)
-	// 	return
-	// }
+	if room.GameState.Board[posX][posY] != "" {
+		log.Printf("Invalid move at position (%d, %d). Spot already taken.", posX, posY)
+		return
+	}
 
-	// // Mark the move on the board
-	// room.GameState.Board[posX][posY] = room.CurrentTurn
-	// log.Printf("Move made by player %s at position (%d, %d)", room.CurrentTurn, posX, posY)
+	// Mark the move on the board
+	room.GameState.Board[posX][posY] = room.CurrentTurn
+	log.Printf("Move made by player %s at position (%d, %d)", room.CurrentTurn, posX, posY)
 
-	// // Check for win or draw
-	// if room.checkWin() {
-	// 	room.GameState.Winner = room.CurrentTurn
-	// } else if room.checkDraw() {
-	// 	room.GameState.IsDraw = true
-	// } else {
-	// 	// Switch turn
-	// 	if room.CurrentTurn == "X" {
-	// 		room.CurrentTurn = "O"
-	// 	} else {
-	// 		room.CurrentTurn = "X"
-	// 	}
-	// 	room.GameState.CurrentPlayer = room.CurrentTurn
-	// }
+	// Check for win or draw
+	if room.checkWin() {
+		room.GameState.Winner = room.CurrentTurn
+	} else if room.checkDraw() {
+		room.GameState.IsDraw = true
+	} else {
+		// Switch turn
+		if room.CurrentTurn == "X" {
+			room.CurrentTurn = "O"
+		} else {
+			room.CurrentTurn = "X"
+		}
+		room.GameState.CurrentPlayer = room.CurrentTurn
+	}
 
 	// Log the current state
 	log.Printf("Current GameState: %+v", room.GameState)

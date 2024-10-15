@@ -54,9 +54,7 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	}
 
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
-	players := []*types.Player{player1, player2}
-
-	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, players)
+	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO)
 
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
