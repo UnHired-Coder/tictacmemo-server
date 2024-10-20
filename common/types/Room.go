@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid" // Import the UUID package
+	"github.com/gorilla/websocket"
 )
 
 // Define an interface that both Base and Derived will adhere to
@@ -22,7 +23,8 @@ type Room struct {
 	UpdatedAt  time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 	Mutex      sync.Mutex
 
-	OnStartGame IStartGame `json:"-"`
+	OnStartGame IStartGame        `json:"-"`
+	Clients     []*websocket.Conn // Store connections for all clients in the room
 }
 
 // CreateRoom initializes a new room with a specified max number of players

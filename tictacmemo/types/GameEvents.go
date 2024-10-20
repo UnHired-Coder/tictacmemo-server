@@ -25,8 +25,7 @@ type JoinRoomData struct {
 }
 
 type MakeMoveData struct {
-	PlayerID int       `json:"playerID"`
-	RoomID   uuid.UUID `json:"roomID"`
-	PosX     int       `json:"posX"`
-	PosY     int       `json:"posY"`
+	PlayerID int `json:"playerID"`
+	PosX     int `json:"posX"`
+	PosY     int `json:"posY"`
 }

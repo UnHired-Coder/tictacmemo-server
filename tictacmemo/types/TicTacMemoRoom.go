@@ -1,12 +1,14 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"game-server/common/types"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 )
 
@@ -156,4 +158,28 @@ func (room *TicTacMemoRoom) checkDraw() bool {
 		}
 	}
 	return true
+}
+
+func (room *TicTacMemoRoom) BroadcastGameState() {
+	gameStateJson, err := json.Marshal(room.GameState)
+	if err != nil {
+		log.Println("Error marshaling game state:", err)
+		return
+	}
+
+	// Iterate through the list of clients and send the message
+	for i := 0; i < len(room.Clients); i++ {
+		client := room.Clients[i]
+		if client == nil {
+			continue
+		}
+		err := client.WriteMessage(websocket.TextMessage, gameStateJson)
+		if err != nil {
+			log.Println("Error sending game state to client:", err)
+			/*client.Close()
+			// Remove the client from the list if sending fails
+			room.Clients = append(room.Clients[:i], room.Clients[i+1:]...)
+			i-- // Adjust index after removal*/
+		}
+	}
 }

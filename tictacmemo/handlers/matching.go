@@ -5,7 +5,6 @@ import (
 	commonTypes "game-server/common/types"
 	"game-server/tictacmemo/types"
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -13,16 +12,6 @@ import (
 )
 
 var PLAYERS_WAITLIST = make(map[string]*websocket.Conn)
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-
-	// CheckOrigin allows connections from any origin (can be customized for security).
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
 
 func Matching(db *gorm.DB, gameManager *types.TicTacMemoGameManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -55,13 +44,13 @@ func Matching(db *gorm.DB, gameManager *types.TicTacMemoGameManager) gin.Handler
 				break
 			}
 
-			processWebSocketMessage(db, gameManager, conn, msg)
+			processMatchingWebSocketMessage(db, gameManager, conn, msg)
 		}
 	}
 }
 
 // Processes WebSocket messages and performs actions based on the "action" field.
-func processWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManager, conn *websocket.Conn, msg []byte) {
+func processMatchingWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManager, conn *websocket.Conn, msg []byte) {
 	log.Printf("Received message from client: %s\n", msg)
 
 	var message types.GameEvent
@@ -90,32 +79,8 @@ func processWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManag
 
 		conn.WriteJSON(joinedRoomData)
 		conn.Close()
-
-	case types.ActionMakeMove:
-		var makeMoveData types.MakeMoveData
-		if err := json.Unmarshal(message.Data, &makeMoveData); err != nil {
-			log.Println("Error unmarshaling make-move data:", err)
-			return
-		}
-
-		room := gameManager.Rooms[makeMoveData.RoomID]
-		room.MakeMove(db, makeMoveData, makeMoveData.PlayerID)
-
-		// Send the updated game state to the client
-		gameStateJson, _ := json.Marshal(room.GameState)
-		conn.WriteMessage(websocket.TextMessage, gameStateJson)
-
 	default:
 		log.Println("Unknown action:", message.Action)
 		conn.WriteMessage(websocket.TextMessage, []byte("Unknown action"))
 	}
-}
-
-func sendWebSocketError(conn *websocket.Conn, errorMsg string) error {
-	errorResponse := map[string]string{"error": errorMsg}
-	errorJSON, err := json.Marshal(errorResponse)
-	if err != nil {
-		return err
-	}
-	return conn.WriteMessage(websocket.TextMessage, errorJSON)
 }
