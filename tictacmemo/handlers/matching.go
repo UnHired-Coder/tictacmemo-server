@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	commonTypes "game-server/common/types"
 	"game-server/tictacmemo/types"
 	"log"
@@ -81,8 +80,16 @@ func processWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManag
 
 		gameManager.JoinRoom(db, joinData)
 
-		response := fmt.Sprintf("User %d successfully joined room %s", joinData.PlayerID, joinData.RoomID)
-		conn.WriteMessage(websocket.TextMessage, []byte(response))
+		joinedRoomData := gin.H{
+			"event": "joined-room",
+			"data": gin.H{
+				"room_id":   joinData.RoomID,
+				"player_id": joinData.PlayerID,
+			},
+		}
+
+		conn.WriteJSON(joinedRoomData)
+		conn.Close()
 
 	case types.ActionMakeMove:
 		var makeMoveData types.MakeMoveData

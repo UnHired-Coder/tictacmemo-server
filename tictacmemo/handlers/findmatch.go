@@ -37,7 +37,13 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 
 		go startMatchMacking(mms, gameManager)
 
-		ctx.JSON(http.StatusOK, gin.H{"message": "Matchmaking started!", "player": player})
+		ctx.JSON(http.StatusOK, gin.H{
+			"event": "matching-started",
+			"data": gin.H{
+				"waitlist_id": waitlistId,
+			},
+		})
+
 	}
 	return gin.HandlerFunc(fn)
 }
@@ -75,12 +81,15 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 
 func sendRoomId(player *types.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
 	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
-	log.Println("Joining room on: " + wsURL)
+	log.Println("Player added to waitlist: " + wsURL)
 
-	roomData := map[string]any{
-		"roomID": roomId,
-		"room":   &room,
-		"player": player,
+	roomData := gin.H{
+		"event": "player-matched",
+		"data": gin.H{
+			"room_id":         roomId,
+			"room":            room,
+			"InitialGameData": player.InitialGameData,
+		},
 	}
 
 	sendRoomDataForMatch(roomData, 1, player.WaitlistId)
@@ -90,6 +99,8 @@ func sendRoomDataForMatch(roomData map[string]any, attempt int, waitlistId strin
 	if attempt < 20 {
 		connection, ok := PLAYERS_WAITLIST[waitlistId]
 		if ok {
+
+			log.Println("Match found, join the room")
 
 			err := connection.WriteJSON(roomData)
 			if err != nil {
