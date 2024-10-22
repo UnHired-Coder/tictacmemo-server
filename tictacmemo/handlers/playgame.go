@@ -67,6 +67,25 @@ func processRoomWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameM
 	}
 
 	switch message.Action {
+
+	case types.ActionJoinRoom:
+		var joinData types.JoinRoomData
+		if err := json.Unmarshal(message.Data, &joinData); err != nil {
+			log.Println("Error unmarshaling join-room data:", err)
+			return
+		}
+
+		joinedRoomData := gin.H{
+			"event": "joined-room",
+			"data": gin.H{
+				"room_id":   joinData.RoomID,
+				"player_id": joinData.PlayerID,
+			},
+		}
+		conn.WriteJSON(joinedRoomData)
+
+		gameManager.JoinRoom(db, joinData)
+
 	case types.ActionMakeMove:
 		var makeMoveData types.MakeMoveData
 		if err := json.Unmarshal(message.Data, &makeMoveData); err != nil {
@@ -77,11 +96,12 @@ func processRoomWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameM
 		room := gameManager.Rooms[roomID]
 		room.MakeMove(db, makeMoveData, makeMoveData.PlayerID)
 
-		room.BroadcastGameState()
+		gameMoveEvent := gin.H{
+			"event": "make-move",
+			"data":  room.GameState,
+		}
 
-		// Send the updated game state to the client
-		/*gameStateJson, _ := json.Marshal(room.GameState)
-		conn.WriteMessage(websocket.TextMessage, gameStateJson)*/
+		room.BroadcastGameState(gameMoveEvent)
 
 	default:
 		log.Println("Unknown action:", message.Action)

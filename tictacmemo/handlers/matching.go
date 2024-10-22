@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	commonTypes "game-server/common/types"
 	"game-server/tictacmemo/types"
 	"log"
@@ -38,49 +37,11 @@ func Matching(db *gorm.DB, gameManager *types.TicTacMemoGameManager) gin.Handler
 
 		for {
 			// Read a message from the WebSocket connection
-			_, msg, err := conn.ReadMessage()
+			_, _, err := conn.ReadMessage()
 			if err != nil {
 				log.Println("Error reading message:", err)
 				break
 			}
-
-			processMatchingWebSocketMessage(db, gameManager, conn, msg)
 		}
-	}
-}
-
-// Processes WebSocket messages and performs actions based on the "action" field.
-func processMatchingWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameManager, conn *websocket.Conn, msg []byte) {
-	log.Printf("Received message from client: %s\n", msg)
-
-	var message types.GameEvent
-	if err := json.Unmarshal(msg, &message); err != nil {
-		log.Println("Error unmarshaling message:", err)
-		return
-	}
-
-	switch message.Action {
-	case types.ActionJoinRoom:
-		var joinData types.JoinRoomData
-		if err := json.Unmarshal(message.Data, &joinData); err != nil {
-			log.Println("Error unmarshaling join-room data:", err)
-			return
-		}
-
-		gameManager.JoinRoom(db, joinData)
-
-		joinedRoomData := gin.H{
-			"event": "joined-room",
-			"data": gin.H{
-				"room_id":   joinData.RoomID,
-				"player_id": joinData.PlayerID,
-			},
-		}
-
-		conn.WriteJSON(joinedRoomData)
-		conn.Close()
-	default:
-		log.Println("Unknown action:", message.Action)
-		conn.WriteMessage(websocket.TextMessage, []byte("Unknown action"))
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
@@ -75,6 +76,13 @@ func (room *TicTacMemoRoom) StartGame() {
 		IsDraw:        false,
 	}
 	room.CurrentTurn = "X"
+
+	gameStart := gin.H{
+		"event": "start-game",
+		"data":  room.GameState,
+	}
+
+	room.BroadcastGameState(gameStart)
 }
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
@@ -160,8 +168,8 @@ func (room *TicTacMemoRoom) checkDraw() bool {
 	return true
 }
 
-func (room *TicTacMemoRoom) BroadcastGameState() {
-	gameStateJson, err := json.Marshal(room.GameState)
+func (room *TicTacMemoRoom) BroadcastGameState(data any) {
+	json, err := json.Marshal(data)
 	if err != nil {
 		log.Println("Error marshaling game state:", err)
 		return
@@ -173,7 +181,7 @@ func (room *TicTacMemoRoom) BroadcastGameState() {
 		if client == nil {
 			continue
 		}
-		err := client.WriteMessage(websocket.TextMessage, gameStateJson)
+		err := client.WriteMessage(websocket.TextMessage, json)
 		if err != nil {
 			log.Println("Error sending game state to client:", err)
 			/*client.Close()
