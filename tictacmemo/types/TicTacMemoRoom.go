@@ -25,11 +25,11 @@ type TicTacMemoRoom struct {
 	types.Room
 	GameState   GameState
 	CurrentTurn string
-	PlayerIDs   map[string]int // Mapping of X or O to playerID
+	PlayerIDs   map[string]string // Mapping of X or O to playerID
 }
 
 // CreateRoom initializes a TicTacMemoRoom with a given maxPlayers and roomID.
-func CreateRoom(maxPlayers int, roomID uuid.UUID, playerXID int, playerOID int) *TicTacMemoRoom {
+func CreateRoom(maxPlayers int, roomID uuid.UUID, playerXID string, playerOID string) *TicTacMemoRoom {
 	// Empty 3x3 board for TicTacToe game
 	board := [3][3]string{
 		{"", "", ""},
@@ -58,7 +58,7 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID, playerXID int, playerOID int) 
 			IsDraw:        false,
 		},
 		CurrentTurn: "X",
-		PlayerIDs: map[string]int{
+		PlayerIDs: map[string]string{
 			"X": playerXID,
 			"O": playerOID,
 		},
@@ -86,7 +86,7 @@ func (room *TicTacMemoRoom) StartGame() {
 }
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
-func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, playerID int) {
+func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, playerID string) {
 	posX, posY := makeMoveData.PosX, makeMoveData.PosY
 
 	// Validate the current player

@@ -13,7 +13,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 
 		// Bind incoming request parameters
 		var userInput struct {
-			ID       int    `json:"id" binding:"required"`
+			UserID   string `json:"userId" binding:"required"`
 			Name     string `json:"name" binding:"required"`
 			Email    string `json:"email" binding:"required,email"`
 			AuthType string `json:"authType" binding:"required"`
@@ -26,10 +26,10 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 		}
 		// Check if the user already exists in the database
 		var user types.User
-		if err := db.Where("id = ?", userInput.ID).First(&user).Error; err != nil {
+		if err := db.Where("user_id = ?", userInput.UserID).First(&user).Error; err != nil {
 			// If the user does not exist, create a new user
 			user = types.User{
-				ID:       userInput.ID,
+				UserID:   userInput.UserID,
 				Username: userInput.Name,
 				Email:    userInput.Email,
 				AuthType: userInput.AuthType,

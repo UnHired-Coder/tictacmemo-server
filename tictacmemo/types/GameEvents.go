@@ -20,12 +20,12 @@ type GameEvent struct {
 }
 
 type JoinRoomData struct {
-	PlayerID int       `json:"playerID"`
+	PlayerID string    `json:"playerID"`
 	RoomID   uuid.UUID `json:"roomID"`
 }
 
 type MakeMoveData struct {
-	PlayerID int `json:"playerID"`
-	PosX     int `json:"posX"`
-	PosY     int `json:"posY"`
+	PlayerID string `json:"playerID"`
+	PosX     int    `json:"posX"`
+	PosY     int    `json:"posY"`
 }

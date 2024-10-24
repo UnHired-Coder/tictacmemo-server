@@ -21,7 +21,7 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 
 		userId := ctx.Query("user_id")
 		var user commonTypes.User
-		if err := db.Where("id = ?", userId).First(&user).Error; err != nil {
+		if err := db.Where("user_id = ?", userId).First(&user).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 			return
 		}
@@ -60,7 +60,7 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	}
 
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
-	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.ID, player2.ID)
+	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.UserID, player2.UserID)
 
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
@@ -80,7 +80,7 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 }
 
 func sendRoomId(player *types.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
-	wsURL := fmt.Sprintf("/%d/%s", player.ID, player.WaitlistId)
+	wsURL := fmt.Sprintf("/%s/%s", player.UserID, player.WaitlistId)
 	log.Println("Player added to waitlist: " + wsURL)
 
 	roomData := gin.H{

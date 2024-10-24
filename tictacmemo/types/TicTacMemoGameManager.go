@@ -19,7 +19,7 @@ func NewTicTacMemoGameManager() *TicTacMemoGameManager {
 	}
 }
 
-func (gm *TicTacMemoGameManager) CreateRoom(maxPlayers int, playerXID int, playerOID int) (uuid.UUID, *TicTacMemoRoom, error) {
+func (gm *TicTacMemoGameManager) CreateRoom(maxPlayers int, playerXID string, playerOID string) (uuid.UUID, *TicTacMemoRoom, error) {
 	roomID := uuid.New()
 	room := CreateRoom(maxPlayers, roomID, playerXID, playerOID)
 	gm.GameManager.CreateRoom(room.ID, room)
@@ -31,7 +31,7 @@ func (gm *TicTacMemoGameManager) CreateRoom(maxPlayers int, playerXID int, playe
 
 func (gm *TicTacMemoGameManager) JoinRoom(db *gorm.DB, roomData JoinRoomData) (*TicTacMemoRoom, error) {
 	var user commonTypes.User
-	result := db.First(&user, roomData.PlayerID)
+	result := db.Where("user_id = ?", roomData.PlayerID).First(&user)
 	if result.Error != nil {
 		log.Fatal("Error fetching user:", result.Error)
 		return nil, result.Error
@@ -39,7 +39,7 @@ func (gm *TicTacMemoGameManager) JoinRoom(db *gorm.DB, roomData JoinRoomData) (*
 
 	joinFunc := func(room *TicTacMemoRoom, player *commonTypes.User) error {
 		for i := range room.Players {
-			if room.Players[i].ID == player.ID {
+			if room.Players[i].UserID == player.UserID {
 				return fmt.Errorf("Player already joined!")
 			}
 		}

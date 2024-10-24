@@ -26,7 +26,7 @@ func Matching(db *gorm.DB, gameManager *types.TicTacMemoGameManager) gin.Handler
 		waitlistID := c.Param("waitlistID")
 
 		var user commonTypes.User
-		if err := db.Where("id = ?", playerID).First(&user).Error; err != nil {
+		if err := db.Where("user_id = ?", playerID).First(&user).Error; err != nil {
 			sendWebSocketError(conn, "User not found.")
 			return
 		}
