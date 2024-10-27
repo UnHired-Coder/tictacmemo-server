@@ -60,7 +60,7 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	}
 
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
-	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.UserID, player2.UserID)
+	roomId, _, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.UserID, player2.UserID)
 
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
@@ -75,20 +75,20 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 	}
 
 	// Now we have enough players, emit room Id over the websocket
-	go sendRoomId(player1, roomId, room)
-	go sendRoomId(player2, roomId, room)
+	go sendRoomId(player1, player2, roomId)
+	go sendRoomId(player2, player1, roomId)
 }
 
-func sendRoomId(player *types.Player, roomId uuid.UUID, room *types.TicTacMemoRoom) {
+func sendRoomId(player *types.Player, opponenet *types.Player, roomId uuid.UUID) {
 	wsURL := fmt.Sprintf("/%s/%s", player.UserID, player.WaitlistId)
 	log.Println("Player added to waitlist: " + wsURL)
 
 	roomData := gin.H{
 		"event": "player-matched",
 		"data": gin.H{
-			"room_id":         roomId,
-			"room":            room,
-			"InitialGameData": player.InitialGameData,
+			"room_id":   roomId,
+			"you":       player,
+			"opponenet": opponenet,
 		},
 	}
 

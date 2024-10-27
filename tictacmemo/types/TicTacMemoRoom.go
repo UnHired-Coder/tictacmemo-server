@@ -91,7 +91,7 @@ func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, pla
 
 	// Validate the current player
 	if room.PlayerIDs[room.CurrentTurn] != playerID {
-		log.Printf("Invalid move by player %d. Not your turn!", playerID)
+		log.Printf("Invalid move by player %s. Not your turn!", playerID)
 		return
 	}
 
