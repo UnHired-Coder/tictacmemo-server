@@ -10,8 +10,9 @@ import (
 type Action string
 
 const (
-	ActionJoinRoom Action = "join-room"
-	ActionMakeMove Action = "make-move"
+	ActionJoinRoom    Action = "join-room"
+	ActionMakeMove    Action = "make-move"
+	ActionUpdateScore Action = "update-score"
 )
 
 type GameEvent struct {
@@ -28,4 +29,11 @@ type MakeMoveData struct {
 	PlayerID string `json:"playerID"`
 	PosX     int    `json:"posX"`
 	PosY     int    `json:"posY"`
+}
+
+type UpdateScoreData struct {
+	PlayerID      string `json:"playerID"`
+	ElapsedTime   int    `json:"elapsedTime"`
+	MoveCount     int    `json:"moveCount"`
+	AssignedLabel string `json:"assignedLabel"`
 }

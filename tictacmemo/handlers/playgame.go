@@ -103,6 +103,16 @@ func processRoomWebSocketMessage(db *gorm.DB, gameManager *types.TicTacMemoGameM
 
 		room.BroadcastGameState(gameMoveEvent)
 
+	case types.ActionUpdateScore:
+		var updateScoreData types.UpdateScoreData
+		if err := json.Unmarshal(message.Data, &updateScoreData); err != nil {
+			log.Println("Error unmarshaling make-move data:", err)
+			return
+		}
+
+		room := gameManager.Rooms[roomID]
+		room.UpdateScore(db, updateScoreData)
+
 	default:
 		log.Println("Unknown action:", message.Action)
 		conn.WriteMessage(websocket.TextMessage, []byte("Unknown action"))

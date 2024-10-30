@@ -134,6 +134,44 @@ func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, pla
 	log.Printf("Current GameState: %+v", room.GameState)
 }
 
+const WEIGHT_MOVES = 2
+const WEIGHT_TIME_ELAPSED = 2
+const MAX_SCORING_TIME = 2
+
+// MakeMove processes the move and updates the game state, checking for winners or draw.
+func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScoreData) {
+	if room.GameState.Winner != "" {
+
+		if room.GameState.IsDraw {
+			// no change
+			return
+		}
+
+		var userId = room.PlayerIDs[updateScoreData.AssignedLabel]
+		var user types.User
+		if err := db.Where("user_id = ?", userId).First(&user).Error; err != nil {
+			log.Fatal("User does not existes", err)
+		}
+
+		var ratingChangeTime = (MAX_SCORING_TIME - updateScoreData.ElapsedTime) * WEIGHT_TIME_ELAPSED
+		var ratingChangeMoves = updateScoreData.MoveCount * WEIGHT_MOVES
+
+		var ratingChange = (ratingChangeTime + ratingChangeMoves)
+
+		if updateScoreData.AssignedLabel == room.GameState.Winner {
+			// if winner
+			user.Rating = user.Rating + ratingChange
+		} else {
+			// if looser
+			user.Rating = user.Rating - ratingChange
+		}
+
+		db.Save(&user)
+
+		log.Printf("Updated Score: Winner: %s, Time: %d, Moves: %d", room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount)
+	}
+}
+
 // checkWin checks if the current player has won.
 func (room *TicTacMemoRoom) checkWin() bool {
 	board := room.GameState.Board
