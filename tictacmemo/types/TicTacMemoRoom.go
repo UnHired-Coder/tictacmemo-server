@@ -136,7 +136,7 @@ func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, pla
 
 const WEIGHT_MOVES = 2
 const WEIGHT_TIME_ELAPSED = 2
-const MAX_SCORING_TIME = 2
+const MAX_SCORING_TIME = 30
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
 func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScoreData) {
@@ -161,14 +161,19 @@ func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScore
 		if updateScoreData.AssignedLabel == room.GameState.Winner {
 			// if winner
 			user.Rating = user.Rating + ratingChange
+
+			log.Printf("Updated Score: Winner: %s, Time: %d, Moves: %d RatingChange: %d",
+				room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
+
 		} else {
 			// if looser
 			user.Rating = user.Rating - ratingChange
+
+			log.Printf("Updated Score: Looser: %s, Time: %d, Moves: %d RatingChange: %d",
+				room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
 		}
 
 		db.Save(&user)
-
-		log.Printf("Updated Score: Winner: %s, Time: %d, Moves: %d", room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount)
 	}
 }
 
