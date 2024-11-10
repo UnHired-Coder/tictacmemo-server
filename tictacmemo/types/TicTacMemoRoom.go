@@ -23,9 +23,11 @@ type GameState struct {
 
 type TicTacMemoRoom struct {
 	types.Room
-	GameState   GameState
-	CurrentTurn string
-	PlayerIDs   map[string]string // Mapping of X or O to playerID
+	GameState         GameState
+	CurrentTurn       string
+	PlayerIDs         map[string]string // Mapping of X or O to playerID
+	OpponentPlayerIDs map[string]string // Mapping of X's opponent to X or O's opponent to O to playerID
+
 }
 
 // CreateRoom initializes a TicTacMemoRoom with a given maxPlayers and roomID.
@@ -61,6 +63,10 @@ func CreateRoom(maxPlayers int, roomID uuid.UUID, playerXID string, playerOID st
 		PlayerIDs: map[string]string{
 			"X": playerXID,
 			"O": playerOID,
+		},
+		OpponentPlayerIDs: map[string]string{
+			"X": playerOID,
+			"O": playerXID,
 		},
 	}
 }
@@ -141,40 +147,60 @@ const MAX_SCORING_TIME = 30
 // MakeMove processes the move and updates the game state, checking for winners or draw.
 func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScoreData) {
 	if room.GameState.Winner != "" {
-
-		if room.GameState.IsDraw {
-			// no change
-			return
-		}
-
 		var userId = room.PlayerIDs[updateScoreData.AssignedLabel]
 		var user types.User
 		if err := db.Where("user_id = ?", userId).First(&user).Error; err != nil {
 			log.Fatal("User does not existes", err)
 		}
 
-		var ratingChangeTime = (MAX_SCORING_TIME - updateScoreData.ElapsedTime) * WEIGHT_TIME_ELAPSED
-		var ratingChangeMoves = updateScoreData.MoveCount * WEIGHT_MOVES
-
-		var ratingChange = (ratingChangeTime + ratingChangeMoves)
-
-		if updateScoreData.AssignedLabel == room.GameState.Winner {
-			// if winner
-			user.Rating = user.Rating + ratingChange
-
-			log.Printf("Updated Score: Winner: %s, Time: %d, Moves: %d RatingChange: %d",
-				room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
-
-		} else {
-			// if looser
-			user.Rating = user.Rating - ratingChange
-
-			log.Printf("Updated Score: Looser: %s, Time: %d, Moves: %d RatingChange: %d",
-				room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
+		var opponentUserId = room.OpponentPlayerIDs[updateScoreData.AssignedLabel]
+		var opponentUser types.User
+		if err := db.Where("user_id = ?", opponentUserId).First(&opponentUser).Error; err != nil {
+			log.Fatal("User does not existes", err)
 		}
+
+		if room.GameState.IsDraw {
+			// no change
+			// Bind incoming request parameters
+			var game GameHistory = GameHistory{
+				UserID:           userId,
+				OpponentUserID:   opponentUser.UserID,
+				OpponentUsername: opponentUser.Username,
+				RatingChange:     0,
+			}
+			db.Create(&game)
+			return
+		}
+
+		var ratingChange int = room.calculateRating(updateScoreData)
+		user.Rating = user.Rating + ratingChange
+
+		log.Printf("Updated Score: %s, Time: %d, Moves: %d RatingChange: %d",
+			room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
+
+		// Bind incoming request parameters
+		var game GameHistory = GameHistory{
+			UserID:           userId,
+			OpponentUserID:   opponentUser.UserID,
+			OpponentUsername: opponentUser.Username,
+			RatingChange:     ratingChange,
+		}
+		db.Create(&game)
 
 		db.Save(&user)
 	}
+}
+
+func (room *TicTacMemoRoom) calculateRating(updateScoreData UpdateScoreData) int {
+	var ratingChangeTime = (MAX_SCORING_TIME - updateScoreData.ElapsedTime) * WEIGHT_TIME_ELAPSED
+	var ratingChangeMoves = updateScoreData.MoveCount * WEIGHT_MOVES
+	var ratingChange = (ratingChangeTime + ratingChangeMoves)
+
+	if updateScoreData.AssignedLabel != room.GameState.Winner {
+		ratingChange = -1 * ratingChange // looser
+	}
+
+	return ratingChange
 }
 
 // checkWin checks if the current player has won.
