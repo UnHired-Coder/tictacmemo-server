@@ -66,10 +66,17 @@ func Profile(db *gorm.DB) gin.HandlerFunc {
 		if err := db.Where("user_id = ?", userInput.UserID).First(&user).Error; err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
 		}
+
+		var gameHistory []types.GameHistory
+		if err := db.Where("user_id = ?", userInput.UserID).Order("created_at DESC").Find(&gameHistory).Error; err != nil {
+			gameHistory = []types.GameHistory{}
+		}
+
 		// Return success response
 		ctx.JSON(http.StatusOK, gin.H{
-			"message": "User ",
-			"user":    user,
+			"message":      "User ",
+			"user":         user,
+			"game_history": gameHistory,
 		})
 	}
 }

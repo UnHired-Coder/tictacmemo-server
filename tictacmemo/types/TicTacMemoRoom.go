@@ -146,49 +146,49 @@ const MAX_SCORING_TIME = 30
 
 // MakeMove processes the move and updates the game state, checking for winners or draw.
 func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScoreData) {
-	if room.GameState.Winner != "" {
-		var userId = room.PlayerIDs[updateScoreData.AssignedLabel]
-		var user types.User
-		if err := db.Where("user_id = ?", userId).First(&user).Error; err != nil {
-			log.Fatal("User does not existes", err)
-		}
+	var userId = room.PlayerIDs[updateScoreData.AssignedLabel]
+	var user types.User
+	if err := db.Where("user_id = ?", userId).First(&user).Error; err != nil {
+		log.Fatal("User does not existes", err)
+	}
 
-		var opponentUserId = room.OpponentPlayerIDs[updateScoreData.AssignedLabel]
-		var opponentUser types.User
-		if err := db.Where("user_id = ?", opponentUserId).First(&opponentUser).Error; err != nil {
-			log.Fatal("User does not existes", err)
-		}
+	var opponentUserId = room.OpponentPlayerIDs[updateScoreData.AssignedLabel]
+	var opponentUser types.User
+	if err := db.Where("user_id = ?", opponentUserId).First(&opponentUser).Error; err != nil {
+		log.Fatal("User does not existes", err)
+	}
 
-		if room.GameState.IsDraw {
-			// no change
-			// Bind incoming request parameters
-			var game GameHistory = GameHistory{
-				UserID:           userId,
-				OpponentUserID:   opponentUser.UserID,
-				OpponentUsername: opponentUser.Username,
-				RatingChange:     0,
-			}
-			db.Create(&game)
-			return
-		}
-
-		var ratingChange int = room.calculateRating(updateScoreData)
-		user.Rating = user.Rating + ratingChange
-
-		log.Printf("Updated Score: %s, Time: %d, Moves: %d RatingChange: %d",
-			room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
-
+	if room.GameState.IsDraw {
+		// no change
 		// Bind incoming request parameters
-		var game GameHistory = GameHistory{
-			UserID:           userId,
-			OpponentUserID:   opponentUser.UserID,
-			OpponentUsername: opponentUser.Username,
-			RatingChange:     ratingChange,
+		var game types.GameHistory = types.GameHistory{
+			UserID:             userId,
+			OpponentUserID:     opponentUser.UserID,
+			OpponentUsername:   opponentUser.Username,
+			RatingBeforeChange: user.Rating,
+			RatingChange:       0,
 		}
 		db.Create(&game)
-
-		db.Save(&user)
+		return
 	}
+
+	var ratingChange int = room.calculateRating(updateScoreData)
+	user.Rating = user.Rating + ratingChange
+	db.Save(&user)
+
+	log.Printf("Updated Score: %s, Time: %d, Moves: %d RatingChange: %d",
+		room.GameState.Winner, updateScoreData.ElapsedTime, updateScoreData.MoveCount, ratingChange)
+
+	// Bind incoming request parameters
+	var game types.GameHistory = types.GameHistory{
+		UserID:             userId,
+		OpponentUserID:     opponentUser.UserID,
+		OpponentUsername:   opponentUser.Username,
+		RatingBeforeChange: user.Rating - ratingChange,
+		RatingChange:       ratingChange,
+	}
+
+	db.Create(&game)
 }
 
 func (room *TicTacMemoRoom) calculateRating(updateScoreData UpdateScoreData) int {
