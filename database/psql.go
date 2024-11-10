@@ -2,8 +2,7 @@ package database
 
 import (
 	"fmt"
-	commonTypes "game-server/common/types"
-	"game-server/tictacmemo/types"
+	"game-server/common/types"
 
 	"log"
 	"os"
@@ -54,7 +53,7 @@ func GetDatabase() *gorm.DB {
 	}
 
 	// User table
-	err = db.AutoMigrate(&commonTypes.User{})
+	err = db.AutoMigrate(&types.User{})
 	if err != nil {
 		log.Fatal("Failed to create User table:", err)
 	}
