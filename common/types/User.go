@@ -12,7 +12,7 @@ type User struct {
 	Email     string    `json:"email" gorm:"index"`
 	AuthType  string    `json:"authType"`
 	Rating    int       `json:"rating" gorm:"index;default:1000"`
-	Rank      int       `json:"rank" gorm:"index;default:0"`
+	Rank      int       `json:"rank" gorm:"--"`
 	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 }

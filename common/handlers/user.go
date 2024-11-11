@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"game-server/common/types"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -71,6 +72,21 @@ func Profile(db *gorm.DB) gin.HandlerFunc {
 		if err := db.Where("user_id = ?", userInput.UserID).Order("created_at DESC").Find(&gameHistory).Error; err != nil {
 			gameHistory = []types.GameHistory{}
 		}
+
+		var rank int
+		query := `
+		SELECT rank FROM (
+			SELECT id, RANK() OVER (ORDER BY rating DESC) AS rank
+			FROM users
+		) subquery
+		WHERE id = ?`
+
+		// Get the rank of the user
+		if err := db.Raw(query, user.ID).Scan(&rank).Error; err != nil {
+			log.Printf("Could not update rank!")
+		}
+
+		user.Rank = rank
 
 		// Return success response
 		ctx.JSON(http.StatusOK, gin.H{
