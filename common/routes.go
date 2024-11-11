@@ -12,5 +12,6 @@ func AttachRoutes(router *gin.Engine, db *gorm.DB) {
 	{
 		this.POST("/login", handlers.Login(db))
 		this.POST("/profile", handlers.Profile(db))
+		this.POST("/leaderboard", handlers.Leaderboard(db))
 	}
 }
