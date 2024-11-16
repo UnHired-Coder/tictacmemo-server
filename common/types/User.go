@@ -15,4 +15,5 @@ type User struct {
 	Rank      int       `json:"rank" gorm:"--"`
 	CreatedAt time.Time `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
+	IsBotUser bool      `json:"isBotUser" gorm:"index"`
 }

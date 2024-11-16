@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"game-server/common/types"
+
 	"log"
 	"time"
 
@@ -138,6 +139,31 @@ func (room *TicTacMemoRoom) MakeMove(db *gorm.DB, makeMoveData MakeMoveData, pla
 
 	// Log the current state
 	log.Printf("Current GameState: %+v", room.GameState)
+
+	//var opponenetPlayerId = room.OpponentPlayerIDs[room.CurrentTurn]
+
+	var opponent = room.Players[0]
+	if opponent.UserID != playerID && opponent.IsBotUser && !room.GameState.IsDraw && room.GameState.Winner == "" {
+		go func() {
+			time.Sleep(2 * time.Second)
+
+			log.Printf("Bot move: %+v", room.GameState)
+
+			posX, posY := room.getBestMove()
+			room.MakeMove(db, MakeMoveData{
+				PlayerID: opponent.UserID,
+				PosX:     posX,
+				PosY:     posY,
+			}, opponent.UserID)
+
+			gameMoveEvent := gin.H{
+				"event": "make-move",
+				"data":  room.GameState,
+			}
+
+			room.BroadcastGameState(gameMoveEvent)
+		}()
+	}
 }
 
 const WEIGHT_MOVES = 2
@@ -259,4 +285,84 @@ func (room *TicTacMemoRoom) BroadcastGameState(data any) {
 			i-- // Adjust index after removal*/
 		}
 	}
+}
+
+// BOT moves
+func (room *TicTacMemoRoom) getBestMove() (int, int) {
+	bestScore := -1000
+	var moveX, moveY int
+
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			// Check if the spot is empty
+			if room.GameState.Board[i][j] == "" {
+				// Make the move
+				room.GameState.Board[i][j] = room.CurrentTurn
+				score := room.minimax(false)
+				// Undo the move
+				room.GameState.Board[i][j] = ""
+
+				// Choose the move with the highest score
+				if score > bestScore {
+					bestScore = score
+					moveX, moveY = i, j
+				}
+			}
+		}
+	}
+	return moveX, moveY
+}
+
+func (room *TicTacMemoRoom) minimax(isMaximizing bool) int {
+	// Check if the game is over
+	if room.checkWin() {
+		if isMaximizing {
+			return -1
+		}
+		return 1
+	} else if room.checkDraw() {
+		return 0
+	}
+
+	bestScore := -1000
+	if isMaximizing {
+		bestScore = -1000
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 3; j++ {
+				if room.GameState.Board[i][j] == "" {
+					room.GameState.Board[i][j] = room.CurrentTurn
+					score := room.minimax(false)
+					room.GameState.Board[i][j] = ""
+					bestScore = max(score, bestScore)
+				}
+			}
+		}
+	} else {
+		bestScore = 1000
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 3; j++ {
+				if room.GameState.Board[i][j] == "" {
+					room.GameState.Board[i][j] = room.CurrentTurn
+					score := room.minimax(true)
+					room.GameState.Board[i][j] = ""
+					bestScore = min(score, bestScore)
+				}
+			}
+		}
+	}
+	return bestScore
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

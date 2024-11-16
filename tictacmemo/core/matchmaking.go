@@ -29,6 +29,25 @@ func (ms *MatchmakingSystem) AddPlayer(player types.Player) {
 	})
 }
 
+func (ms *MatchmakingSystem) RemovePlayer(playerID string) {
+	ms.mutex.Lock()
+	defer ms.mutex.Unlock()
+
+	// Find the index of the player with the given playerID
+	index := -1
+	for i, player := range ms.players {
+		if player.User.UserID == playerID {
+			index = i
+			break
+		}
+	}
+
+	// If the player is found, remove them from the slice
+	if index != -1 {
+		ms.players = append(ms.players[:index], ms.players[index+1:]...)
+	}
+}
+
 // MatchPlayers tries to find a match for two players with similar ratings within a specified timeout.
 func (ms *MatchmakingSystem) MatchPlayers(timeout time.Duration) (*types.Player, *types.Player, error) {
 	expiry := time.Now().Add(timeout)

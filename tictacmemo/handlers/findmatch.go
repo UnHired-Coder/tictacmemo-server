@@ -3,9 +3,8 @@ package handlers
 import (
 	"fmt"
 	commonTypes "game-server/common/types"
-	"game-server/tictacmemo/types"
-
 	"game-server/tictacmemo/core"
+	"game-server/tictacmemo/types"
 
 	"log"
 	"net/http"
@@ -35,7 +34,28 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 		// Add player to the matchmaking system
 		mms.AddPlayer(player)
 
-		go startMatchMacking(mms, gameManager)
+		go startMatchMacking(mms, gameManager, func() {
+			// If match not found, match directly with bot user
+			log.Println("No Match Found, matching with bot player")
+
+			mms.RemovePlayer(player.UserID)
+
+			// Get similar rated bot user
+			var botUser commonTypes.User
+			if err := db.Where("is_bot_user = ?", true).First(&botUser).Error; err != nil {
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Bot user not found"})
+				return
+			}
+
+			// Match this player with bot user
+			waitlistId := uuid.New()
+			botPlayer := types.Player{
+				User:       botUser,
+				WaitlistId: waitlistId.String(),
+			}
+
+			onPlayerMatched(gameManager, &player, &botPlayer)
+		})
 
 		ctx.JSON(http.StatusOK, gin.H{
 			"event": "matching-started",
@@ -48,19 +68,24 @@ func FindMatch(db *gorm.DB, mms *core.MatchmakingSystem, gameManager *types.TicT
 	return gin.HandlerFunc(fn)
 }
 
-func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMemoGameManager) {
+func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMemoGameManager, onNoMatchFound func()) {
 	// Match players with a timeout (e.g., 30 seconds)
-	player1, player2, err := mms.MatchPlayers(300 * time.Second)
+	player1, player2, err := mms.MatchPlayers(10 * time.Second)
 	if err != nil {
-		log.Fatal("Error: " + err.Error())
+		onNoMatchFound()
+		return
 	}
 
 	if player1 == nil || player2 == nil {
 		log.Fatal("Something went wrong!")
 	}
 
+	onPlayerMatched(gameManager, player1, player2)
+}
+
+func onPlayerMatched(gameManager *types.TicTacMemoGameManager, player1 *types.Player, player2 *types.Player) {
 	MAX_PLAYERS_TIC_TAC_MEMEO := 2
-	roomId, _, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.UserID, player2.UserID)
+	roomId, room, err := gameManager.CreateRoom(MAX_PLAYERS_TIC_TAC_MEMEO, player1.UserID, player2.UserID)
 
 	if err != nil {
 		log.Println("Failed to Create Room:", err)
@@ -76,7 +101,12 @@ func startMatchMacking(mms *core.MatchmakingSystem, gameManager *types.TicTacMem
 
 	// Now we have enough players, emit room Id over the websocket
 	go sendRoomId(player1, player2, roomId)
-	go sendRoomId(player2, player1, roomId)
+	if player2.User.IsBotUser {
+		// If bot user, directly join the room.
+		room.JoinRoom(&player2.User)
+	} else {
+		go sendRoomId(player2, player1, roomId)
+	}
 }
 
 func sendRoomId(player *types.Player, opponenet *types.Player, roomId uuid.UUID) {
