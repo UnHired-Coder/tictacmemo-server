@@ -29,6 +29,10 @@ func init() {
 	// Attach the routes from tictacmemo package
 	log.Println("ATTACHING ROUTES:tictacmemo")
 	tictacmemo.AttachRoutes(router, db)
+
+	for _, route := range router.Routes() {
+		log.Printf("Registered Route: %s %s", route.Method, route.Path)
+	}
 }
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -47,6 +51,6 @@ func CORSMiddleware() gin.HandlerFunc {
 
 // Handler is the entry point for Vercel
 func Handler(w http.ResponseWriter, r *http.Request) {
-	log.Println("SERVING: HANDLER")
+	log.Printf("SERVING: HANDLER: %s %s", r.Method, r.URL.Path)
 	router.ServeHTTP(w, r)
 }
