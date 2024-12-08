@@ -40,7 +40,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Connection, Upgrade, Sec-WebSocket-Key, Sec-WebSocket-Version, Sec-WebSocket-Extensions")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Connection, Upgrade")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		// Allow preflight requests to pass
@@ -55,6 +55,6 @@ func CORSMiddleware() gin.HandlerFunc {
 
 // Handler is the entry point for Vercel
 func Handler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("SERVING: HANDLER: %s %s", r.Method, r.URL.Path)
+	log.Printf("SERVING: HANDLER: %s %s", r.Method, r.URL)
 	router.ServeHTTP(w, r)
 }
