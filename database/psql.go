@@ -52,8 +52,8 @@ func GetDatabase() *gorm.DB {
 	}
 
 	if sqlDB, err := db.DB(); err == nil {
-		sqlDB.SetConnMaxLifetime(time.Hour)
-		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Second * 30)
+		sqlDB.SetMaxOpenConns(2)
 	} else {
 		log.Fatal("Failed to set connection pool parameters")
 	}
