@@ -38,11 +38,14 @@ func GetDatabase() *gorm.DB {
 		connectionString = "postgres://neondb_owner:AboRXKe7x2SB@ep-gentle-voice-a11e1sd6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 	}
 
+	log.Println("Databse hosted on url...")
 	log.Println(connectionString)
 
 	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{
 		Logger: logger.Default.LogMode(logMode),
 	})
+
+	log.Println("Checking connection...")
 
 	if err != nil {
 		log.Fatal("Unable to connect to the database " + err.Error())
