@@ -21,19 +21,22 @@ func GetDatabase() *gorm.DB {
 		dbHost = os.Getenv("TEST_DB_HOST")
 	}
 
+	connectionString := ""
+
 	logMode := logger.Silent
 	if os.Getenv("ENV") == "dev" {
 		logMode = logger.Info
+		connectionString = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
+			os.Getenv("DB_USERNAME"),
+			os.Getenv("DB_PASSWORD"),
+			dbHost,
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_NAME"),
+		)
+	} else {
+		connectionString = "postgres://neondb_owner:AboRXKe7x2SB@ep-gentle-voice-a11e1sd6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 	}
-
-	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
-		os.Getenv("DB_USERNAME"),
-		os.Getenv("DB_PASSWORD"),
-		dbHost,
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
 
 	log.Println(connectionString)
 
