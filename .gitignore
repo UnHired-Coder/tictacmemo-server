@@ -24,3 +24,4 @@ go.work.sum
 
 game-server
 game-server.exe
+app.go
