@@ -4,6 +4,7 @@ import (
 	"game-server/common"
 	"game-server/database"
 	"game-server/tictacmemo"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,24 +13,21 @@ import (
 var router *gin.Engine
 
 func init() {
-	// Load the environment variables
-	/*err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}*/
-
 	// Initialize the Gin router
 	router = gin.Default()
 	router.Use(gin.Recovery())
 	router.Use(CORSMiddleware())
 
 	// Get the database connection
+	log.Println("SETTING UP DB")
 	db := database.GetDatabase()
 
 	// Attach the routes from common package
+	log.Println("ATTACHING ROUTES:common")
 	common.AttachRoutes(router, db)
 
 	// Attach the routes from tictacmemo package
+	log.Println("ATTACHING ROUTES:tictacmemo")
 	tictacmemo.AttachRoutes(router, db)
 }
 
@@ -49,5 +47,6 @@ func CORSMiddleware() gin.HandlerFunc {
 
 // Handler is the entry point for Vercel
 func Handler(w http.ResponseWriter, r *http.Request) {
+	log.Println("SERVING: HANDLER")
 	router.ServeHTTP(w, r)
 }
