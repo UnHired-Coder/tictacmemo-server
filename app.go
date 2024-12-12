@@ -1,5 +1,4 @@
 package main
-
 import (
 	"fmt"
 	"game-server/common"
@@ -9,10 +8,28 @@ import (
 	"net/http"
 	"os"
 	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
+/*
+Notes: 
+DB is hosted on Neon.
+The backend server is hosted on replit.
+*/
+
+
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(200)
+			return
+		}
+		c.Next()
+	}
+}
 
 func main() {
 	// Load the environment variables
@@ -20,21 +37,17 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
 	// Create a new router
 	router := gin.Default()
 	// Recover from any panics
 	router.Use(gin.Recovery())
-
+	router.Use(CORSMiddleware())
 	// Get the database connection
 	db := database.GetDatabase()
-
 	// Attach the routes from common package
 	common.AttachRoutes(router, db)
-
 	// Attach the routes from tictacmemo package
 	tictacmemo.AttachRoutes(router, db)
-
 	// Start the server on the specified port
 	server := &http.Server{
 		Addr:           fmt.Sprintf(":%s", os.Getenv("PORT")),

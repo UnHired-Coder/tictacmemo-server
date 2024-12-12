@@ -21,33 +21,39 @@ func GetDatabase() *gorm.DB {
 		dbHost = os.Getenv("TEST_DB_HOST")
 	}
 
+	connectionString := ""
+
 	logMode := logger.Silent
 	if os.Getenv("ENV") == "dev" {
 		logMode = logger.Info
+		connectionString = fmt.Sprintf(
+			"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
+			os.Getenv("DB_USERNAME"),
+			os.Getenv("DB_PASSWORD"),
+			dbHost,
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_NAME"),
+		)
+	} else {
+		connectionString = "postgres://neondb_owner:AboRXKe7x2SB@ep-gentle-voice-a11e1sd6-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 	}
 
-	connectionString := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=prefer",
-		os.Getenv("DB_USERNAME"),
-		os.Getenv("DB_PASSWORD"),
-		dbHost,
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
-
+	log.Println("Databse hosted on url...")
 	log.Println(connectionString)
 
 	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{
 		Logger: logger.Default.LogMode(logMode),
 	})
 
+	log.Println("Checking connection...")
+
 	if err != nil {
 		log.Fatal("Unable to connect to the database " + err.Error())
 	}
 
 	if sqlDB, err := db.DB(); err == nil {
-		sqlDB.SetConnMaxLifetime(time.Hour)
-		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Second * 30)
+		sqlDB.SetMaxOpenConns(1)
 	} else {
 		log.Fatal("Failed to set connection pool parameters")
 	}
