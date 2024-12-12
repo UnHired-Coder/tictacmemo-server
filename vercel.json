@@ -1,5 +1,7 @@
 {
 	"rewrites": [
+	  { "source": "/tictacmemo/(.*)", "destination": "/api/index.go" },
+	  { "source": "/common/(.*)", "destination": "/api/index.go" },
 	  { "source": "/(.*)", "destination": "/api/index.go" }
 	]
   }
