@@ -12,7 +12,7 @@ import (
 
 var router *gin.Engine
 
-func init() {
+func main() {
 	// Initialize the Gin router
 	router = gin.Default()
 	router.Use(gin.Recovery())
