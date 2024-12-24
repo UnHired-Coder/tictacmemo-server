@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"game-server/common"
 	"game-server/database"
 	"game-server/tictacmemo"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +36,16 @@ func main() {
 	for _, route := range router.Routes() {
 		log.Printf("Registered Route: %s %s", route.Method, route.Path)
 	}
+
+	// Start the server on the specified port
+	server := &http.Server{
+		Addr:           fmt.Sprintf(":%s", os.Getenv("PORT")),
+		Handler:        router,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	server.ListenAndServe()
 }
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -51,10 +64,4 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// Handler is the entry point for Vercel
-func Handler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("SERVING: HANDLER: %s %s", r.Method, r.URL)
-	router.ServeHTTP(w, r)
 }
