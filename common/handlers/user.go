@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"game-server/common/types"
 	"log"
 	"net/http"
+	"time"
+
+	"math/rand"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -34,6 +38,7 @@ func Login(db *gorm.DB) gin.HandlerFunc {
 				Username: userInput.Name,
 				Email:    userInput.Email,
 				AuthType: userInput.AuthType,
+				Avatar:   getRandomAvatar(),
 			}
 			if err := db.Create(&user).Error; err != nil {
 				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -95,4 +100,10 @@ func Profile(db *gorm.DB) gin.HandlerFunc {
 			"game_history": gameHistory,
 		})
 	}
+}
+
+func getRandomAvatar() string {
+	rand.Seed(time.Now().UnixNano())                                                                                                           // Seed the random number generator with int64
+	randomNumber := rand.Intn(11) + 1                                                                                                          // Generate a random number between 1 and 100
+	return fmt.Sprintf("https://firebasestorage.googleapis.com/v0/b/tictacmemo-123e7.appspot.com/o/avatars%%2F%d.png?alt=media", randomNumber) // Return the avatar filename
 }
