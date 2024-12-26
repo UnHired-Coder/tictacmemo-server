@@ -30,17 +30,25 @@ func (helper *TicTacToeHelper) GetSmartMove(board [3][3]string, currentPlayer st
 		return move
 	}
 
-	// 3. Take the center if available
+	// 3. Check for the diagonal opposite square if the first move is a corner
+	if firstCornerMove := helper.findFirstCornerMove(board); firstCornerMove != nil {
+		diagonalMove := helper.getDiagonalOpposite(*firstCornerMove)
+		if helper.isValidMove(board, diagonalMove) {
+			return &diagonalMove
+		}
+	}
+
+	// 4. Take the center if available
 	if board[1][1] == "" {
 		return &Point{X: 1, Y: 1}
 	}
 
-	// 4. Take any empty corner
+	// 5. Take any empty corner
 	if move := helper.findEmptyCorner(board); move != nil && helper.isValidMove(board, *move) {
 		return move
 	}
 
-	// 5. Take any empty side
+	// 6. Take any empty side
 	return helper.findEmptySide(board)
 }
 
@@ -109,4 +117,33 @@ func (helper *TicTacToeHelper) findEmptySide(board [3][3]string) *Point {
 
 func (helper *TicTacToeHelper) isValidMove(board [3][3]string, move Point) bool {
 	return board[move.X][move.Y] == ""
+}
+
+// findFirstCornerMove checks if the first move is in a corner square.
+func (helper *TicTacToeHelper) findFirstCornerMove(board [3][3]string) *Point {
+	corners := []Point{
+		{X: 0, Y: 0}, {X: 0, Y: 2}, {X: 2, Y: 0}, {X: 2, Y: 2},
+	}
+
+	for _, corner := range corners {
+		if board[corner.X][corner.Y] != "" {
+			return &corner
+		}
+	}
+	return nil
+}
+
+// getDiagonalOpposite returns the diagonally opposite square of a given corner.
+func (helper *TicTacToeHelper) getDiagonalOpposite(corner Point) Point {
+	switch corner {
+	case Point{X: 0, Y: 0}:
+		return Point{X: 2, Y: 2}
+	case Point{X: 0, Y: 2}:
+		return Point{X: 2, Y: 0}
+	case Point{X: 2, Y: 0}:
+		return Point{X: 0, Y: 2}
+	case Point{X: 2, Y: 2}:
+		return Point{X: 0, Y: 0}
+	}
+	return Point{}
 }
