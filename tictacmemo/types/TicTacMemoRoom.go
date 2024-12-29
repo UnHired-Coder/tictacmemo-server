@@ -194,6 +194,7 @@ func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScore
 			UserID:             userId,
 			OpponentUserID:     opponentUser.UserID,
 			OpponentUsername:   opponentUser.Username,
+			OpponentAvatar:     opponentUser.Avatar,
 			RatingBeforeChange: user.Rating,
 			RatingChange:       0,
 		}
@@ -213,6 +214,7 @@ func (room *TicTacMemoRoom) UpdateScore(db *gorm.DB, updateScoreData UpdateScore
 		UserID:             userId,
 		OpponentUserID:     opponentUser.UserID,
 		OpponentUsername:   opponentUser.Username,
+		OpponentAvatar:     opponentUser.Avatar,
 		RatingBeforeChange: user.Rating - ratingChange,
 		RatingChange:       ratingChange,
 	}
